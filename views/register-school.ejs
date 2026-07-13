@@ -1,0 +1,67 @@
+<%- include('partials/header', { title: 'Register School' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card p-4">
+      <h3 class="mb-3">Register Your School</h3>
+      <form method="POST" action="/register-school">
+        <h6 class="text-muted mt-2 mb-3">School Details</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">School Name *</label>
+            <input type="text" name="schoolName" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">School Email</label>
+            <input type="email" name="email" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Address</label>
+            <input type="text" name="address" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Current Session</label>
+            <input type="text" name="session" class="form-control" placeholder="e.g. 2025/2026" value="2025/2026">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Current Term</label>
+            <select name="term" class="form-select">
+              <option>1st Term</option>
+              <option>2nd Term</option>
+              <option>3rd Term</option>
+            </select>
+          </div>
+        </div>
+
+        <h6 class="text-muted mt-4 mb-3">Administrator Account</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Your Name</label>
+            <input type="text" name="adminName" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Admin Email *</label>
+            <input type="email" name="adminEmail" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Password *</label>
+            <input type="password" name="password" class="form-control" required minlength="6">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirm Password *</label>
+            <input type="password" name="confirmPassword" class="form-control" required minlength="6">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-4">Register School</button>
+        <a href="/login" class="btn btn-link mt-4">Already registered? Log in</a>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,36 @@
+<%- include('../partials/header', { title: 'Results' }) %>
+
+<h3 class="mb-4">Student Results</h3>
+
+<div class="card p-4 mb-4">
+  <form method="GET" action="/admin/results" class="row g-2">
+    <div class="col-md-6">
+      <label class="form-label">Class</label>
+      <select name="classId" class="form-select" onchange="this.form.submit()">
+        <% classes.forEach(function(c) { %>
+          <option value="<%= c.id %>" <%= c.id === selectedClassId ? 'selected' : '' %>><%= c.name %></option>
+        <% }) %>
+      </select>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4">
+  <table class="table">
+    <thead><tr><th>Name</th><th>Reg. No.</th><th></th></tr></thead>
+    <tbody>
+      <% students.forEach(function(s) { %>
+        <tr>
+          <td><%= s.name %></td>
+          <td><%= s.regNo %></td>
+          <td class="text-end"><a href="/results/<%= s.id %>" class="btn btn-sm btn-primary">View / Print Result</a></td>
+        </tr>
+      <% }) %>
+      <% if (!students.length) { %>
+        <tr><td colspan="3" class="text-muted text-center">No students in this class.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

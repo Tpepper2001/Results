@@ -1,0 +1,21 @@
+<%- include('../partials/header', { title: 'My Assignments' }) %>
+
+<h3 class="mb-4">Welcome, <%= currentUser.name %></h3>
+<p class="text-muted">Current session: <strong><%= school.session %></strong>, <strong><%= school.term %></strong></p>
+
+<div class="row g-3">
+  <% list.forEach(function(item) { %>
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h5><%= item.subjectName %></h5>
+        <p class="text-muted mb-2"><%= item.className %></p>
+        <a href="/teacher/scores?classId=<%= item.classId %>&subjectId=<%= item.subjectId %>" class="btn btn-primary btn-sm">Enter / Edit Scores</a>
+      </div>
+    </div>
+  <% }) %>
+  <% if (!list.length) { %>
+    <p class="text-muted">You have not been assigned to any subject/class yet. Please contact your school administrator.</p>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

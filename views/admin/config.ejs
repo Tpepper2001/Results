@@ -1,0 +1,73 @@
+<%- include('../partials/header', { title: 'School Configuration' }) %>
+
+<h3 class="mb-4">School Configuration</h3>
+
+<div class="card p-4 mb-4">
+  <h5 class="mb-3">School Details &amp; Session</h5>
+  <form method="POST" action="/admin/config">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">School Name</label>
+        <input type="text" name="schoolName" class="form-control" value="<%= school.name %>" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" value="<%= school.email %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Phone</label>
+        <input type="text" name="phone" class="form-control" value="<%= school.phone %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Address</label>
+        <input type="text" name="address" class="form-control" value="<%= school.address %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Current Session</label>
+        <input type="text" name="session" class="form-control" value="<%= school.session %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Current Term</label>
+        <select name="term" class="form-select">
+          <% ['1st Term','2nd Term','3rd Term'].forEach(function(t) { %>
+            <option <%= school.term === t ? 'selected' : '' %>><%= t %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+  </form>
+</div>
+
+<div class="card p-4 mb-4">
+  <h5 class="mb-3">Score Weighting</h5>
+  <p class="text-muted">Fixed as requested: 1st CA (max 20) + 2nd CA (max 20) + Exam (max 60) = Total (100).</p>
+  <div class="d-flex gap-4">
+    <div><strong>1st CA:</strong> 20</div>
+    <div><strong>2nd CA:</strong> 20</div>
+    <div><strong>Exam:</strong> 60</div>
+    <div><strong>Total:</strong> 100</div>
+  </div>
+</div>
+
+<div class="card p-4">
+  <h5 class="mb-3">Grading Scale</h5>
+  <form method="POST" action="/admin/config/grading">
+    <table class="table align-middle">
+      <thead><tr><th>Grade</th><th>Min Score</th><th>Max Score</th><th>Remark</th></tr></thead>
+      <tbody>
+        <% gradingScale.forEach(function(g) { %>
+          <tr>
+            <td><input type="text" name="grade" class="form-control" value="<%= g.grade %>" required></td>
+            <td><input type="number" name="min" class="form-control" value="<%= g.min %>" min="0" max="100" required></td>
+            <td><input type="number" name="max" class="form-control" value="<%= g.max %>" min="0" max="100" required></td>
+            <td><input type="text" name="remark" class="form-control" value="<%= g.remark %>" required></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Save Grading Scale</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

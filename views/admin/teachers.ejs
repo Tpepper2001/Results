@@ -1,0 +1,71 @@
+<%- include('../partials/header', { title: 'Teachers' }) %>
+
+<h3 class="mb-4">Manage Teachers</h3>
+
+<div class="card p-4 mb-4">
+  <h5 class="mb-3">Register a Teacher</h5>
+  <form method="POST" action="/admin/teachers" class="row g-2">
+    <div class="col-md-4">
+      <input type="text" name="name" class="form-control" placeholder="Full name" required>
+    </div>
+    <div class="col-md-4">
+      <input type="email" name="email" class="form-control" placeholder="Email" required>
+    </div>
+    <div class="col-md-3">
+      <input type="password" name="password" class="form-control" placeholder="Password" required minlength="6">
+    </div>
+    <div class="col-md-1">
+      <button type="submit" class="btn btn-primary w-100">Add</button>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4">
+  <h5 class="mb-3">Teachers &amp; Assignments</h5>
+  <% teachers.forEach(function(t) { %>
+    <div class="border rounded p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong><%= t.name %></strong> <span class="text-muted">(<%= t.email %>)</span>
+          <div class="mt-1">
+            <% (teacherAssignments[t.id] || []).forEach(function(a) { %>
+              <span class="badge bg-secondary me-1"><%= a %></span>
+            <% }) %>
+            <% if (!teacherAssignments[t.id] || !teacherAssignments[t.id].length) { %>
+              <span class="text-muted">No subject/class assigned yet.</span>
+            <% } %>
+          </div>
+        </div>
+        <form method="POST" action="/admin/teachers/<%= t.id %>/delete" onsubmit="return confirm('Remove this teacher?');">
+          <button class="btn btn-sm btn-outline-danger">Delete</button>
+        </form>
+      </div>
+      <form method="POST" action="/admin/teachers/<%= t.id %>/assign" class="row g-2 mt-2">
+        <div class="col-md-5">
+          <select name="subjectId" class="form-select form-select-sm" required>
+            <option value="">Select subject</option>
+            <% subjects.forEach(function(s) { %>
+              <option value="<%= s.id %>"><%= s.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <select name="classId" class="form-select form-select-sm" required>
+            <option value="">Select class</option>
+            <% classes.forEach(function(c) { %>
+              <option value="<%= c.id %>"><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-sm btn-outline-primary w-100">Assign</button>
+        </div>
+      </form>
+    </div>
+  <% }) %>
+  <% if (!teachers.length) { %>
+    <p class="text-muted text-center mb-0">No teachers registered yet.</p>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

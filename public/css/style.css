@@ -1,0 +1,39 @@
+body {
+  background-color: #f4f6f9;
+}
+.card {
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.hero {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: #fff;
+  padding: 5rem 0;
+  border-radius: 0 0 1rem 1rem;
+}
+.stat-card {
+  border-radius: .75rem;
+  padding: 1.5rem;
+  color: #fff;
+}
+.bg-stat-1 { background: #2563eb; }
+.bg-stat-2 { background: #059669; }
+.bg-stat-3 { background: #d97706; }
+.bg-stat-4 { background: #7c3aed; }
+
+table.result-sheet th, table.result-sheet td {
+  vertical-align: middle;
+}
+
+.result-header {
+  text-align: center;
+  border-bottom: 3px double #333;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .container { max-width: 100% !important; }
+}

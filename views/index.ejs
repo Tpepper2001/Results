@@ -1,0 +1,33 @@
+<%- include('partials/header', { title: 'Results Management System' }) %>
+
+<div class="hero text-center mb-5">
+  <div class="container">
+    <h1 class="display-5 fw-bold">School Results Management System</h1>
+    <p class="lead mb-4">Register your school, add students and teachers, and let subject teachers enter CA and exam scores. Results, grades and printable result sheets are generated automatically.</p>
+    <a href="/register-school" class="btn btn-light btn-lg me-2">Register a School</a>
+    <a href="/login" class="btn btn-outline-light btn-lg">Log In</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card p-4 h-100">
+      <h5>1. Register &amp; Configure</h5>
+      <p class="text-muted mb-0">Register your school, set the current session/term and customize the grading scale.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-4 h-100">
+      <h5>2. Add Students &amp; Teachers</h5>
+      <p class="text-muted mb-0">Register students into classes, add subject teachers and assign them to subjects/classes.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-4 h-100">
+      <h5>3. Enter Scores &amp; View Results</h5>
+      <p class="text-muted mb-0">Teachers input 1st CA (/20), 2nd CA (/20) and Exam (/60). Totals, grades and printable result sheets are generated automatically.</p>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

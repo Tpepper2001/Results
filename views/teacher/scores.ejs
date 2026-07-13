@@ -1,0 +1,47 @@
+<%- include('../partials/header', { title: 'Enter Scores' }) %>
+
+<h3 class="mb-1"><%= subject.name %> &mdash; <%= cls.name %></h3>
+<p class="text-muted mb-4">Enter 1st CA (max <%= SCORE_MAX.ca1 %>), 2nd CA (max <%= SCORE_MAX.ca2 %>) and Exam (max <%= SCORE_MAX.exam %>). Total is out of <%= SCORE_MAX.total %> and is calculated automatically.</p>
+
+<form method="POST" action="/teacher/scores">
+  <input type="hidden" name="classId" value="<%= classId %>">
+  <input type="hidden" name="subjectId" value="<%= subjectId %>">
+
+  <div class="card p-3">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th style="width:110px;">1st CA (/<%= SCORE_MAX.ca1 %>)</th>
+          <th style="width:110px;">2nd CA (/<%= SCORE_MAX.ca2 %>)</th>
+          <th style="width:110px;">Exam (/<%= SCORE_MAX.exam %>)</th>
+          <th style="width:100px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% students.forEach(function(st) { %>
+          <% const sc = existingScores[st.id]; %>
+          <tr>
+            <td>
+              <%= st.name %>
+              <input type="hidden" name="studentIds" value="<%= st.id %>">
+            </td>
+            <td><input type="number" name="ca1" class="form-control" min="0" max="<%= SCORE_MAX.ca1 %>" step="0.5" value="<%= sc.ca1 %>"></td>
+            <td><input type="number" name="ca2" class="form-control" min="0" max="<%= SCORE_MAX.ca2 %>" step="0.5" value="<%= sc.ca2 %>"></td>
+            <td><input type="number" name="exam" class="form-control" min="0" max="<%= SCORE_MAX.exam %>" step="0.5" value="<%= sc.exam %>"></td>
+            <td class="text-muted"><%= sc.total || 0 %></td>
+          </tr>
+        <% }) %>
+        <% if (!students.length) { %>
+          <tr><td colspan="5" class="text-muted text-center">No students registered in this class yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (students.length) { %>
+    <button type="submit" class="btn btn-primary mt-3">Save Scores</button>
+  <% } %>
+</form>
+
+<%- include('../partials/footer') %>

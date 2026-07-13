@@ -1,0 +1,29 @@
+<%- include('partials/header', { title: 'Log In' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card p-4">
+      <h3 class="mb-3">Log In</h3>
+      <form method="POST" action="/login">
+        <div class="mb-3">
+          <label class="form-label">School Code</label>
+          <input type="text" name="schoolCode" class="form-control" placeholder="e.g. GREE1234" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Log In</button>
+      </form>
+      <p class="text-center mt-3 mb-0">
+        <a href="/register-school">Register a new school</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

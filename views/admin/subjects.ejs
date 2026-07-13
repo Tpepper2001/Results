@@ -1,0 +1,41 @@
+<%- include('../partials/header', { title: 'Subjects' }) %>
+
+<h3 class="mb-4">Manage Subjects</h3>
+
+<div class="card p-4 mb-4">
+  <form method="POST" action="/admin/subjects" class="row g-2">
+    <div class="col-md-6">
+      <input type="text" name="name" class="form-control" placeholder="e.g. Mathematics" required>
+    </div>
+    <div class="col-md-3">
+      <input type="text" name="code" class="form-control" placeholder="Code (optional)">
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary w-100">Add Subject</button>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4">
+  <table class="table">
+    <thead><tr><th>Subject</th><th>Code</th><th></th></tr></thead>
+    <tbody>
+      <% subjects.forEach(function(s) { %>
+        <tr>
+          <td><%= s.name %></td>
+          <td><%= s.code %></td>
+          <td class="text-end">
+            <form method="POST" action="/admin/subjects/<%= s.id %>/delete" onsubmit="return confirm('Remove this subject?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!subjects.length) { %>
+        <tr><td colspan="3" class="text-muted text-center">No subjects added yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

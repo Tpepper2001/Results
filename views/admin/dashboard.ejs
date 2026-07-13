@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: 'Admin Dashboard' }) %>
+
+<h3 class="mb-4">Welcome, <%= currentUser.name %></h3>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card bg-stat-1">
+      <div class="fs-2 fw-bold"><%= stats.students %></div>
+      <div>Students</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card bg-stat-2">
+      <div class="fs-2 fw-bold"><%= stats.classes %></div>
+      <div>Classes</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card bg-stat-3">
+      <div class="fs-2 fw-bold"><%= stats.subjects %></div>
+      <div>Subjects</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card bg-stat-4">
+      <div class="fs-2 fw-bold"><%= stats.teachers %></div>
+      <div>Teachers</div>
+    </div>
+  </div>
+</div>
+
+<div class="card p-4 mb-4">
+  <h5>Current Session</h5>
+  <p class="mb-0"><strong><%= school.session %></strong> &middot; <strong><%= school.term %></strong></p>
+  <p class="text-muted mb-0">Change this any time from <a href="/admin/config">School Configuration</a>.</p>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-3"><a href="/admin/students" class="btn btn-outline-primary w-100">Manage Students</a></div>
+  <div class="col-md-3"><a href="/admin/classes" class="btn btn-outline-primary w-100">Manage Classes</a></div>
+  <div class="col-md-3"><a href="/admin/subjects" class="btn btn-outline-primary w-100">Manage Subjects</a></div>
+  <div class="col-md-3"><a href="/admin/teachers" class="btn btn-outline-primary w-100">Manage Teachers</a></div>
+</div>
+
+<%- include('../partials/footer') %>
