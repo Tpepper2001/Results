@@ -1,8 +1,22 @@
 <%- include('../partials/header', { title: 'My Assignments' }) %>
 
-<h3 class="mb-4">Welcome, <%= currentUser.name %></h3>
-<p class="text-muted">Current session: <strong><%= school.session %></strong>, <strong><%= school.term %></strong></p>
+<h3 class="mb-1">Welcome, <%= currentUser.name %></h3>
+<p class="text-muted mb-4"><%= school.session %> &middot; <%= school.term %></p>
 
+<% if (isFormTeacher) { %>
+  <div class="card p-3 mb-4 border-success">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <span class="badge bg-success mb-1">Form Teacher</span>
+        <h5 class="mb-0">Form Class: <%= formClass %></h5>
+        <p class="text-muted mb-0 small">You can enter psychomotor skill ratings for your form class.</p>
+      </div>
+      <a href="/formteacher/psychomotor" class="btn btn-success">Enter Psychomotor Scores</a>
+    </div>
+  </div>
+<% } %>
+
+<h5 class="mb-3">Subject Assignments</h5>
 <div class="row g-3">
   <% list.forEach(function(item) { %>
     <div class="col-md-4">
@@ -14,7 +28,7 @@
     </div>
   <% }) %>
   <% if (!list.length) { %>
-    <p class="text-muted">You have not been assigned to any subject/class yet. Please contact your school administrator.</p>
+    <p class="text-muted">No subject assignments yet. Contact your administrator.</p>
   <% } %>
 </div>
 

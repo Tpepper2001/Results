@@ -5,34 +5,44 @@
 </div>
 
 <div class="card p-4">
+  <!-- School Header -->
   <div class="result-header">
     <h3 class="mb-0"><%= school.name %></h3>
     <p class="mb-0"><%= school.address %></p>
-    <p class="mb-0"><%= school.phone %> <% if (school.email) { %>&middot; <%= school.email %><% } %></p>
-    <h5 class="mt-3">STUDENT RESULT SHEET</h5>
+    <p class="mb-0"><%= school.phone %><% if (school.email) { %> &middot; <%= school.email %><% } %></p>
+    <h5 class="mt-3 mb-0">STUDENT REPORT CARD</h5>
     <p class="mb-0"><%= session %> Academic Session &middot; <%= term %></p>
   </div>
 
-  <div class="row mb-3">
+  <!-- Student Bio -->
+  <div class="row mb-2 g-2">
     <div class="col-md-4"><strong>Name:</strong> <%= student.name %></div>
     <div class="col-md-4"><strong>Reg. No.:</strong> <%= student.regNo %></div>
     <div class="col-md-4"><strong>Class:</strong> <%= cls ? cls.name : '-' %></div>
-  </div>
-  <div class="row mb-4">
     <div class="col-md-4"><strong>Gender:</strong> <%= student.gender || '-' %></div>
-    <div class="col-md-4"><strong>No. in Class:</strong> <%= classSize %></div>
-    <div class="col-md-4"><strong>Position:</strong> <%= rows.length ? position : '-' %></div>
+    <div class="col-md-4"><strong>Date of Birth:</strong> <%= student.dob || '-' %></div>
+    <div class="col-md-4"><strong>Position:</strong> <%= rows.length ? position + ' / ' + classSize : '-' %></div>
+    <% if (student.bloodGroup) { %><div class="col-md-3"><strong>Blood Group:</strong> <%= student.bloodGroup %></div><% } %>
+    <% if (student.genotype) { %><div class="col-md-3"><strong>Genotype:</strong> <%= student.genotype %></div><% } %>
+    <% if (student.religion) { %><div class="col-md-3"><strong>Religion:</strong> <%= student.religion %></div><% } %>
+    <% if (student.stateOfOrigin) { %><div class="col-md-3"><strong>State of Origin:</strong> <%= student.stateOfOrigin %></div><% } %>
+    <% if (student.fatherName) { %><div class="col-md-4"><strong>Father:</strong> <%= student.fatherName %><% if (student.fatherPhone) { %> (<%= student.fatherPhone %>)<% } %></div><% } %>
+    <% if (student.motherName) { %><div class="col-md-4"><strong>Mother:</strong> <%= student.motherName %><% if (student.motherPhone) { %> (<%= student.motherPhone %>)<% } %></div><% } %>
+    <% if (student.homeAddress) { %><div class="col-md-8"><strong>Address:</strong> <%= student.homeAddress %></div><% } %>
   </div>
+  <hr>
 
+  <!-- Academic Scores -->
+  <h6 class="mt-2 mb-2">Academic Performance</h6>
   <table class="table table-bordered result-sheet">
     <thead class="table-light">
       <tr>
         <th>Subject</th>
-        <th>1st CA (20)</th>
-        <th>2nd CA (20)</th>
-        <th>Exam (60)</th>
-        <th>Total (100)</th>
-        <th>Grade</th>
+        <th class="text-center">1st CA (20)</th>
+        <th class="text-center">2nd CA (20)</th>
+        <th class="text-center">Exam (60)</th>
+        <th class="text-center">Total (100)</th>
+        <th class="text-center">Grade</th>
         <th>Remark</th>
       </tr>
     </thead>
@@ -40,37 +50,80 @@
       <% rows.forEach(function(r) { %>
         <tr>
           <td><%= r.subject %></td>
-          <td><%= r.ca1 %></td>
-          <td><%= r.ca2 %></td>
-          <td><%= r.exam %></td>
-          <td><strong><%= r.total %></strong></td>
-          <td><%= r.grade %></td>
+          <td class="text-center"><%= r.ca1 %></td>
+          <td class="text-center"><%= r.ca2 %></td>
+          <td class="text-center"><%= r.exam %></td>
+          <td class="text-center"><strong><%= r.total %></strong></td>
+          <td class="text-center"><%= r.grade %></td>
           <td><%= r.remark %></td>
         </tr>
       <% }) %>
       <% if (!rows.length) { %>
-        <tr><td colspan="7" class="text-center text-muted">No scores recorded yet for this session/term.</td></tr>
+        <tr><td colspan="7" class="text-center text-muted">No scores recorded yet.</td></tr>
       <% } %>
     </tbody>
     <% if (rows.length) { %>
     <tfoot>
       <tr class="table-light">
         <td colspan="4" class="text-end"><strong>Total Score</strong></td>
-        <td><strong><%= totalScore %></strong></td>
+        <td class="text-center"><strong><%= totalScore %></strong></td>
         <td colspan="2"><strong>Average: <%= average %></strong></td>
       </tr>
     </tfoot>
     <% } %>
   </table>
 
+  <!-- Psychomotor Skills -->
+  <% if (psychomotor) { %>
+    <h6 class="mt-3 mb-2">Psychomotor Skills
+      <small class="text-muted fw-normal ms-2">5=Excellent &nbsp; 4=Very Good &nbsp; 3=Good &nbsp; 2=Fair &nbsp; 1=Poor</small>
+    </h6>
+    <table class="table table-bordered result-sheet">
+      <thead class="table-light">
+        <tr>
+          <% skills.forEach(function(sk) { %><th class="text-center"><%= sk.label %></th><% }) %>
+          <th>Form Teacher's Comment</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <% skills.forEach(function(sk) { %>
+            <%
+              const keyMap = {
+                handwriting: 'handwriting', drawing: 'drawing', sports: 'sports',
+                musical_ability: 'musicalAbility', practical_skills: 'practicalSkills',
+                verbal_fluency: 'verbalFluency', creativity: 'creativity'
+              };
+              const val = psychomotor[keyMap[sk.key]];
+            %>
+            <td class="text-center">
+              <% if (val) { %>
+                <strong><%= val %></strong><br>
+                <small class="text-muted"><%= rating[val] %></small>
+              <% } else { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+          <% }) %>
+          <td><%= psychomotor.formTeacherComment || '-' %></td>
+        </tr>
+      </tbody>
+    </table>
+  <% } %>
+
+  <!-- Signature Section -->
   <div class="row mt-5">
-    <div class="col-md-6">
+    <div class="col-md-4">
+      <p>_________________________</p>
+      <p class="text-muted">Form Teacher's Signature</p>
+    </div>
+    <div class="col-md-4">
       <p>_________________________</p>
       <p class="text-muted">Class Teacher's Signature</p>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
       <p>_________________________</p>
-      <p class="text-muted">Principal / Head Teacher's Signature</p>
+      <p class="text-muted">Principal / Head Teacher</p>
     </div>
   </div>
 </div>

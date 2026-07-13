@@ -8,35 +8,38 @@ const { mapClass, mapSubject, mapAssignment, mapStudent, mapScore } = require('.
 
 router.use(requireLogin, requireRole('teacher'));
 
-// ---------- Dashboard: list this teacher's subject/class assignments ----------
 router.get('/', asyncHandler(async (req, res) => {
   const schoolId = req.session.school.id;
   const teacherId = req.session.user.id;
 
-  const [{ data: assignRows, error: aErr }, { data: classRows, error: cErr }, { data: subjectRows, error: sErr }] = await Promise.all([
+  const [
+    { data: assignRows, error: aErr },
+    { data: classRows, error: cErr },
+    { data: subjectRows, error: sErr },
+    { data: ftaRow, error: ftaErr }
+  ] = await Promise.all([
     supabase.from('teacher_assignments').select('*').eq('school_id', schoolId).eq('teacher_id', teacherId),
     supabase.from('classes').select('*').eq('school_id', schoolId),
-    supabase.from('subjects').select('*').eq('school_id', schoolId)
+    supabase.from('subjects').select('*').eq('school_id', schoolId),
+    supabase.from('form_teacher_assignments').select('*').eq('school_id', schoolId).eq('teacher_id', teacherId).maybeSingle()
   ]);
-  if (aErr) throw aErr;
-  if (cErr) throw cErr;
-  if (sErr) throw sErr;
+  if (aErr) throw aErr; if (cErr) throw cErr; if (sErr) throw sErr; if (ftaErr) throw ftaErr;
 
   const classMap = {}; (classRows || []).map(mapClass).forEach(c => classMap[c.id] = c.name);
   const subjectMap = {}; (subjectRows || []).map(mapSubject).forEach(s => subjectMap[s.id] = s.name);
 
   const list = (assignRows || []).map(mapAssignment).map(a => ({
-    id: a.id,
-    classId: a.classId,
-    subjectId: a.subjectId,
+    id: a.id, classId: a.classId, subjectId: a.subjectId,
     className: classMap[a.classId] || 'Unknown class',
     subjectName: subjectMap[a.subjectId] || 'Unknown subject'
   }));
 
-  res.render('teacher/dashboard', { list });
+  const isFormTeacher = !!ftaRow;
+  const formClass = ftaRow ? classMap[ftaRow.class_id] : null;
+
+  res.render('teacher/dashboard', { list, isFormTeacher, formClass });
 }));
 
-// ---------- Score entry form ----------
 router.get('/scores', asyncHandler(async (req, res) => {
   const schoolId = req.session.school.id;
   const teacherId = req.session.user.id;
@@ -51,21 +54,21 @@ router.get('/scores', asyncHandler(async (req, res) => {
   }
 
   const school = req.session.school;
-
-  const [{ data: studentRows, error: stErr }, { data: clsRow, error: clsErr }, { data: subjRow, error: subjErr }, { data: scoreRows, error: scErr }] = await Promise.all([
+  const [
+    { data: studentRows, error: stErr },
+    { data: clsRow, error: clsErr },
+    { data: subjRow, error: subjErr },
+    { data: scoreRows, error: scErr }
+  ] = await Promise.all([
     supabase.from('students').select('*').eq('school_id', schoolId).eq('class_id', classId).order('name'),
     supabase.from('classes').select('*').eq('id', classId).single(),
     supabase.from('subjects').select('*').eq('id', subjectId).single(),
     supabase.from('scores').select('*').eq('school_id', schoolId).eq('subject_id', subjectId).eq('class_id', classId).eq('session', school.session).eq('term', school.term)
   ]);
-  if (stErr) throw stErr;
-  if (clsErr) throw clsErr;
-  if (subjErr) throw subjErr;
-  if (scErr) throw scErr;
+  if (stErr) throw stErr; if (clsErr) throw clsErr; if (subjErr) throw subjErr; if (scErr) throw scErr;
 
   const students = (studentRows || []).map(mapStudent);
   const scores = (scoreRows || []).map(mapScore);
-
   const existingScores = {};
   students.forEach(st => {
     const sc = scores.find(s => s.studentId === st.id);
@@ -103,7 +106,6 @@ router.post('/scores', asyncHandler(async (req, res) => {
     const ex = Math.min(SCORE_MAX.exam, Math.max(0, Number(exams[i]) || 0));
     const total = c1 + c2 + ex;
     const gradeInfo = getGrade(total, school.gradingScale);
-
     return {
       school_id: schoolId, student_id: studentId, subject_id: subjectId, class_id: classId,
       session: school.session, term: school.term,
@@ -112,7 +114,6 @@ router.post('/scores', asyncHandler(async (req, res) => {
   });
 
   if (rows.length) {
-    // One score per student/subject/session/term — upsert on that unique constraint.
     const { error } = await supabase.from('scores').upsert(rows, { onConflict: 'student_id,subject_id,session,term' });
     if (error) throw error;
   }

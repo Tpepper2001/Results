@@ -118,3 +118,63 @@ alter table students enable row level security;
 alter table scores enable row level security;
 -- No policies are created, so only the service_role key (used by the server) can
 -- read/write these tables.
+
+-- ==========================================
+-- MIGRATION: Psychomotor skills & extended student bio
+-- Run this in Supabase SQL Editor if you already ran the first schema.
+-- Safe to run on a fresh database too (uses IF NOT EXISTS / IF NOT EXISTS column checks).
+-- ==========================================
+
+-- Extended student bio fields (all optional)
+alter table students add column if not exists father_name text default '';
+alter table students add column if not exists father_phone text default '';
+alter table students add column if not exists mother_name text default '';
+alter table students add column if not exists mother_phone text default '';
+alter table students add column if not exists home_address text default '';
+alter table students add column if not exists state_of_origin text default '';
+alter table students add column if not exists nationality text default 'Nigerian';
+alter table students add column if not exists religion text default '';
+alter table students add column if not exists blood_group text default '';
+alter table students add column if not exists genotype text default '';
+alter table students add column if not exists previous_school text default '';
+
+-- Form teacher assignment: one teacher per class per school
+create table if not exists form_teacher_assignments (
+  id uuid primary key default gen_random_uuid(),
+  school_id uuid not null references schools(id) on delete cascade,
+  teacher_id uuid not null references users(id) on delete cascade,
+  class_id uuid not null references classes(id) on delete cascade,
+  unique (school_id, class_id)
+);
+
+create index if not exists idx_fta_school on form_teacher_assignments(school_id);
+create index if not exists idx_fta_teacher on form_teacher_assignments(teacher_id);
+create index if not exists idx_fta_class on form_teacher_assignments(class_id);
+
+alter table form_teacher_assignments enable row level security;
+
+-- Psychomotor scores
+-- rating: 1=Poor, 2=Fair, 3=Good, 4=Very Good, 5=Excellent (Nigerian standard)
+create table if not exists psychomotor_scores (
+  id uuid primary key default gen_random_uuid(),
+  school_id uuid not null references schools(id) on delete cascade,
+  student_id uuid not null references students(id) on delete cascade,
+  class_id uuid references classes(id) on delete set null,
+  session text not null,
+  term text not null,
+  handwriting integer check (handwriting between 1 and 5),
+  drawing integer check (drawing between 1 and 5),
+  sports integer check (sports between 1 and 5),
+  musical_ability integer check (musical_ability between 1 and 5),
+  practical_skills integer check (practical_skills between 1 and 5),
+  verbal_fluency integer check (verbal_fluency between 1 and 5),
+  creativity integer check (creativity between 1 and 5),
+  form_teacher_comment text default '',
+  entered_by uuid references users(id) on delete set null,
+  unique (student_id, session, term)
+);
+
+create index if not exists idx_psycho_school on psychomotor_scores(school_id);
+create index if not exists idx_psycho_student on psychomotor_scores(student_id);
+
+alter table psychomotor_scores enable row level security;

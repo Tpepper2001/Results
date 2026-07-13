@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 app.use('/', require('./routes/auth'));
 app.use('/admin', require('./routes/admin'));
 app.use('/teacher', require('./routes/teacher'));
+app.use('/formteacher', require('./routes/formteacher'));
 app.use('/results', require('./routes/results'));
 
 app.use((req, res) => {

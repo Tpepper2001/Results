@@ -21,18 +21,22 @@
 </div>
 
 <div class="card p-4">
-  <h5 class="mb-3">Teachers &amp; Assignments</h5>
+  <h5 class="mb-3">Teachers, Subject Assignments &amp; Form Classes</h5>
   <% teachers.forEach(function(t) { %>
     <div class="border rounded p-3 mb-3">
-      <div class="d-flex justify-content-between align-items-start">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
-          <strong><%= t.name %></strong> <span class="text-muted">(<%= t.email %>)</span>
+          <strong><%= t.name %></strong>
+          <span class="text-muted ms-1">(<%= t.email %>)</span>
+          <% if (teacherFormClass[t.id]) { %>
+            <span class="badge bg-success ms-2">Form Teacher — <%= classMap[teacherFormClass[t.id]] %></span>
+          <% } %>
           <div class="mt-1">
             <% (teacherAssignments[t.id] || []).forEach(function(a) { %>
               <span class="badge bg-secondary me-1"><%= a %></span>
             <% }) %>
             <% if (!teacherAssignments[t.id] || !teacherAssignments[t.id].length) { %>
-              <span class="text-muted">No subject/class assigned yet.</span>
+              <span class="text-muted small">No subject/class assigned yet.</span>
             <% } %>
           </div>
         </div>
@@ -40,27 +44,41 @@
           <button class="btn btn-sm btn-outline-danger">Delete</button>
         </form>
       </div>
-      <form method="POST" action="/admin/teachers/<%= t.id %>/assign" class="row g-2 mt-2">
-        <div class="col-md-5">
-          <select name="subjectId" class="form-select form-select-sm" required>
-            <option value="">Select subject</option>
-            <% subjects.forEach(function(s) { %>
-              <option value="<%= s.id %>"><%= s.name %></option>
-            <% }) %>
-          </select>
+
+      <div class="row g-2 mt-2">
+        <!-- Subject assignment -->
+        <div class="col-md-6">
+          <p class="mb-1 small text-muted fw-bold">Assign Subject / Class</p>
+          <form method="POST" action="/admin/teachers/<%= t.id %>/assign" class="d-flex gap-2">
+            <select name="subjectId" class="form-select form-select-sm" required>
+              <option value="">Subject</option>
+              <% subjects.forEach(function(s) { %>
+                <option value="<%= s.id %>"><%= s.name %></option>
+              <% }) %>
+            </select>
+            <select name="classId" class="form-select form-select-sm" required>
+              <option value="">Class</option>
+              <% classes.forEach(function(c) { %>
+                <option value="<%= c.id %>"><%= c.name %></option>
+              <% }) %>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-primary">Assign</button>
+          </form>
         </div>
-        <div class="col-md-5">
-          <select name="classId" class="form-select form-select-sm" required>
-            <option value="">Select class</option>
-            <% classes.forEach(function(c) { %>
-              <option value="<%= c.id %>"><%= c.name %></option>
-            <% }) %>
-          </select>
+        <!-- Form teacher assignment -->
+        <div class="col-md-6">
+          <p class="mb-1 small text-muted fw-bold">Assign as Form Teacher</p>
+          <form method="POST" action="/admin/teachers/<%= t.id %>/assign-form" class="d-flex gap-2">
+            <select name="classId" class="form-select form-select-sm" required>
+              <option value="">Select class</option>
+              <% classes.forEach(function(c) { %>
+                <option value="<%= c.id %>" <%= teacherFormClass[t.id] === c.id ? 'selected' : '' %>><%= c.name %></option>
+              <% }) %>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-success">Set</button>
+          </form>
         </div>
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-sm btn-outline-primary w-100">Assign</button>
-        </div>
-      </form>
+      </div>
     </div>
   <% }) %>
   <% if (!teachers.length) { %>

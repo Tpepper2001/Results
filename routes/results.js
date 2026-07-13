@@ -3,7 +3,7 @@ const router = express.Router();
 const supabase = require('../db/supabase');
 const asyncHandler = require('../utils/asyncHandler');
 const { requireLogin } = require('../middleware/auth');
-const { mapStudent, mapClass, mapSubject, mapScore } = require('../utils/mappers');
+const { mapStudent, mapClass, mapSubject, mapScore, mapPsychomotor, PSYCHOMOTOR_SKILLS, PSYCHOMOTOR_RATING } = require('../utils/mappers');
 
 router.use(requireLogin);
 
@@ -21,11 +21,9 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
   }
   const student = mapStudent(studentRow);
 
-  // Teachers may only view results for students they teach; admins can view any.
   if (req.session.user.role === 'teacher') {
-    const { data: teachesRow, error: teachesErr } = await supabase.from('teacher_assignments')
+    const { data: teachesRow } = await supabase.from('teacher_assignments')
       .select('id').eq('school_id', schoolId).eq('teacher_id', req.session.user.id).eq('class_id', student.classId).maybeSingle();
-    if (teachesErr) throw teachesErr;
     if (!teachesRow) {
       req.flash('error', 'You do not teach this class.');
       return res.redirect('/teacher');
@@ -35,14 +33,18 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
   const session = req.query.session || school.session;
   const term = req.query.term || school.term;
 
-  const [{ data: scoreRows, error: scErr }, { data: subjectRows, error: subjErr }, { data: clsRow, error: clsErr }] = await Promise.all([
+  const [
+    { data: scoreRows, error: scErr },
+    { data: subjectRows, error: subjErr },
+    { data: clsRow, error: clsErr },
+    { data: psychoRow, error: psErr }
+  ] = await Promise.all([
     supabase.from('scores').select('*').eq('school_id', schoolId).eq('student_id', studentId).eq('session', session).eq('term', term),
     supabase.from('subjects').select('*').eq('school_id', schoolId),
-    supabase.from('classes').select('*').eq('id', student.classId).maybeSingle()
+    supabase.from('classes').select('*').eq('id', student.classId).maybeSingle(),
+    supabase.from('psychomotor_scores').select('*').eq('school_id', schoolId).eq('student_id', studentId).eq('session', session).eq('term', term).maybeSingle()
   ]);
-  if (scErr) throw scErr;
-  if (subjErr) throw subjErr;
-  if (clsErr) throw clsErr;
+  if (scErr) throw scErr; if (subjErr) throw subjErr; if (clsErr) throw clsErr; if (psErr) throw psErr;
 
   const subjectMap = {}; (subjectRows || []).map(mapSubject).forEach(s => subjectMap[s.id] = s.name);
   const scores = (scoreRows || []).map(mapScore);
@@ -55,15 +57,10 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
   const totalScore = rows.reduce((sum, r) => sum + r.total, 0);
   const average = rows.length ? (totalScore / rows.length).toFixed(2) : '0.00';
 
-  // Class position based on average score across the same session/term
+  // Class position
   const classId = student.classId;
-  const { data: classmateRows, error: cmErr } = await supabase.from('students').select('id').eq('school_id', schoolId).eq('class_id', classId);
-  if (cmErr) throw cmErr;
-  const classmates = classmateRows || [];
-
-  const { data: allScoresRows, error: allScErr } = await supabase.from('scores')
-    .select('student_id, total').eq('school_id', schoolId).eq('class_id', classId).eq('session', session).eq('term', term);
-  if (allScErr) throw allScErr;
+  const { data: classmateRows } = await supabase.from('students').select('id').eq('school_id', schoolId).eq('class_id', classId);
+  const { data: allScoresRows } = await supabase.from('scores').select('student_id, total').eq('school_id', schoolId).eq('class_id', classId).eq('session', session).eq('term', term);
 
   const totalsByStudent = {};
   (allScoresRows || []).forEach(r => {
@@ -72,16 +69,18 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
     totalsByStudent[r.student_id].count += 1;
   });
 
-  const rankings = classmates.map(cm => {
+  const rankings = (classmateRows || []).map(cm => {
     const t = totalsByStudent[cm.id];
-    const avg = t && t.count ? t.sum / t.count : 0;
-    return { studentId: cm.id, avg };
+    return { studentId: cm.id, avg: t && t.count ? t.sum / t.count : 0 };
   }).sort((a, b) => b.avg - a.avg);
   const position = rankings.findIndex(r => r.studentId === studentId) + 1;
 
+  const psychomotor = psychoRow ? mapPsychomotor(psychoRow) : null;
+
   res.render('results/sheet', {
     student, cls: mapClass(clsRow), school, session, term, rows, totalScore, average,
-    position, classSize: classmates.length
+    position, classSize: (classmateRows || []).length,
+    psychomotor, skills: PSYCHOMOTOR_SKILLS, rating: PSYCHOMOTOR_RATING
   });
 }));
 

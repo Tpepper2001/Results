@@ -3,43 +3,113 @@
 <h3 class="mb-4">Register Students</h3>
 
 <div class="card p-4 mb-4">
-  <form method="POST" action="/admin/students" class="row g-2">
-    <div class="col-md-4">
-      <label class="form-label">Full Name *</label>
-      <input type="text" name="name" class="form-control" required>
+  <form method="POST" action="/admin/students">
+    <h6 class="text-muted mb-3">Compulsory Information</h6>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Class <span class="text-danger">*</span></label>
+        <select name="classId" class="form-select" required>
+          <option value="">Select class</option>
+          <% classes.forEach(function(c) { %>
+            <option value="<%= c.id %>"><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Gender <span class="text-danger">*</span></label>
+        <select name="gender" class="form-select" required>
+          <option value="">Select</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+        <input type="date" name="dob" class="form-control" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Reg. No. <span class="text-muted">(auto if blank)</span></label>
+        <input type="text" name="regNo" class="form-control">
+      </div>
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Reg. No.</label>
-      <input type="text" name="regNo" class="form-control" placeholder="Auto if blank">
+
+    <h6 class="text-muted mt-4 mb-3">Parent / Guardian Information <small class="fw-normal">(optional)</small></h6>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Father's Name</label>
+        <input type="text" name="fatherName" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Father's Phone</label>
+        <input type="tel" name="fatherPhone" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Mother's Name</label>
+        <input type="text" name="motherName" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Mother's Phone</label>
+        <input type="tel" name="motherPhone" class="form-control">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Home Address</label>
+        <input type="text" name="homeAddress" class="form-control">
+      </div>
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Class *</label>
-      <select name="classId" class="form-select" required>
-        <option value="">Select</option>
-        <% classes.forEach(function(c) { %>
-          <option value="<%= c.id %>"><%= c.name %></option>
-        <% }) %>
-      </select>
+
+    <h6 class="text-muted mt-4 mb-3">Personal Details <small class="fw-normal">(optional)</small></h6>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">State of Origin</label>
+        <input type="text" name="stateOfOrigin" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Nationality</label>
+        <input type="text" name="nationality" class="form-control" value="Nigerian">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Religion</label>
+        <select name="religion" class="form-select">
+          <option value="">Select</option>
+          <option>Christianity</option>
+          <option>Islam</option>
+          <option>Traditional</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Blood Group</label>
+        <select name="bloodGroup" class="form-select">
+          <option value="">Select</option>
+          <option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option>
+          <option>O+</option><option>O-</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Genotype</label>
+        <select name="genotype" class="form-select">
+          <option value="">Select</option>
+          <option>AA</option><option>AS</option>
+          <option>SS</option><option>AC</option><option>SC</option>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Previous School</label>
+        <input type="text" name="previousSchool" class="form-control">
+      </div>
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Gender</label>
-      <select name="gender" class="form-select">
-        <option value="">-</option>
-        <option>Male</option>
-        <option>Female</option>
-      </select>
-    </div>
-    <div class="col-md-2">
-      <label class="form-label">Date of Birth</label>
-      <input type="date" name="dob" class="form-control">
-    </div>
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary mt-2">Register Student</button>
-    </div>
+
+    <button type="submit" class="btn btn-primary mt-4">Register Student</button>
+    <% if (!classes.length) { %>
+      <p class="text-danger mt-2 mb-0">You need to <a href="/admin/classes">add a class</a> before registering students.</p>
+    <% } %>
   </form>
-  <% if (!classes.length) { %>
-    <p class="text-danger mt-2 mb-0">You need to <a href="/admin/classes">add a class</a> before registering students.</p>
-  <% } %>
 </div>
 
 <div class="card p-4">
@@ -53,7 +123,8 @@
           <td><%= classMap[s.classId] || '-' %></td>
           <td><%= s.gender %></td>
           <td class="text-end">
-            <a href="/results/<%= s.id %>" class="btn btn-sm btn-outline-primary">View Result</a>
+            <a href="/results/<%= s.id %>" class="btn btn-sm btn-outline-primary">Result</a>
+            <a href="/admin/students/<%= s.id %>/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
             <form method="POST" action="/admin/students/<%= s.id %>/delete" class="d-inline" onsubmit="return confirm('Remove this student?');">
               <button class="btn btn-sm btn-outline-danger">Delete</button>
             </form>

@@ -1,0 +1,115 @@
+<%- include('../partials/header', { title: 'Edit Student' }) %>
+
+<h3 class="mb-4">Edit Student — <%= student.name %></h3>
+
+<div class="card p-4 mb-4">
+  <form method="POST" action="/admin/students/<%= student.id %>/edit">
+
+    <h6 class="text-muted mb-3">Compulsory Information</h6>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+        <input type="text" name="name" class="form-control" value="<%= student.name %>" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Class <span class="text-danger">*</span></label>
+        <select name="classId" class="form-select" required>
+          <% classes.forEach(function(c) { %>
+            <option value="<%= c.id %>" <%= c.id === student.classId ? 'selected' : '' %>><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Gender <span class="text-danger">*</span></label>
+        <select name="gender" class="form-select" required>
+          <option value="">Select</option>
+          <% ['Male','Female'].forEach(function(g) { %>
+            <option <%= student.gender === g ? 'selected' : '' %>><%= g %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+        <input type="date" name="dob" class="form-control" value="<%= student.dob || '' %>" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Reg. No.</label>
+        <input type="text" name="regNo" class="form-control" value="<%= student.regNo %>">
+      </div>
+    </div>
+
+    <h6 class="text-muted mt-4 mb-3">Parent / Guardian Information <small class="fw-normal">(optional)</small></h6>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Father's Name</label>
+        <input type="text" name="fatherName" class="form-control" value="<%= student.fatherName %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Father's Phone</label>
+        <input type="tel" name="fatherPhone" class="form-control" value="<%= student.fatherPhone %>">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Mother's Name</label>
+        <input type="text" name="motherName" class="form-control" value="<%= student.motherName %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Mother's Phone</label>
+        <input type="tel" name="motherPhone" class="form-control" value="<%= student.motherPhone %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Home Address</label>
+        <input type="text" name="homeAddress" class="form-control" value="<%= student.homeAddress %>">
+      </div>
+    </div>
+
+    <h6 class="text-muted mt-4 mb-3">Personal Details <small class="fw-normal">(optional)</small></h6>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">State of Origin</label>
+        <input type="text" name="stateOfOrigin" class="form-control" value="<%= student.stateOfOrigin %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Nationality</label>
+        <input type="text" name="nationality" class="form-control" value="<%= student.nationality %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Religion</label>
+        <select name="religion" class="form-select">
+          <option value="">Select</option>
+          <% ['Christianity','Islam','Traditional','Other'].forEach(function(r) { %>
+            <option <%= student.religion === r ? 'selected' : '' %>><%= r %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Blood Group</label>
+        <select name="bloodGroup" class="form-select">
+          <option value="">Select</option>
+          <% ['A+','A-','B+','B-','AB+','AB-','O+','O-'].forEach(function(b) { %>
+            <option <%= student.bloodGroup === b ? 'selected' : '' %>><%= b %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Genotype</label>
+        <select name="genotype" class="form-select">
+          <option value="">Select</option>
+          <% ['AA','AS','SS','AC','SC'].forEach(function(g) { %>
+            <option <%= student.genotype === g ? 'selected' : '' %>><%= g %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Previous School</label>
+        <input type="text" name="previousSchool" class="form-control" value="<%= student.previousSchool %>">
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="/admin/students" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>
