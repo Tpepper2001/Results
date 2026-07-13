@@ -1,0 +1,123 @@
+<%- include('../partials/header', { title: 'My Students' }) %>
+
+<h3 class="mb-1">Students — <%= cls.name %></h3>
+<p class="text-muted mb-4">As form teacher, students you register here are automatically placed in your form class.</p>
+
+<div class="card p-4 mb-4">
+  <form method="POST" action="/formteacher/students">
+    <h6 class="text-muted mb-3">Compulsory Information</h6>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Gender <span class="text-danger">*</span></label>
+        <select name="gender" class="form-select" required>
+          <option value="">Select</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+        <input type="date" name="dob" class="form-control" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Reg. No. <span class="text-muted">(auto if blank)</span></label>
+        <input type="text" name="regNo" class="form-control">
+      </div>
+    </div>
+
+    <h6 class="text-muted mt-4 mb-3">Parent / Guardian Information <small class="fw-normal">(optional)</small></h6>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Father's Name</label>
+        <input type="text" name="fatherName" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Father's Phone</label>
+        <input type="tel" name="fatherPhone" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Mother's Name</label>
+        <input type="text" name="motherName" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Mother's Phone</label>
+        <input type="tel" name="motherPhone" class="form-control">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Home Address</label>
+        <input type="text" name="homeAddress" class="form-control">
+      </div>
+    </div>
+
+    <h6 class="text-muted mt-4 mb-3">Personal Details <small class="fw-normal">(optional)</small></h6>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">State of Origin</label>
+        <input type="text" name="stateOfOrigin" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Nationality</label>
+        <input type="text" name="nationality" class="form-control" value="Nigerian">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Religion</label>
+        <select name="religion" class="form-select">
+          <option value="">Select</option>
+          <option>Christianity</option>
+          <option>Islam</option>
+          <option>Traditional</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Blood Group</label>
+        <select name="bloodGroup" class="form-select">
+          <option value="">Select</option>
+          <option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option>
+          <option>O+</option><option>O-</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Genotype</label>
+        <select name="genotype" class="form-select">
+          <option value="">Select</option>
+          <option>AA</option><option>AS</option>
+          <option>SS</option><option>AC</option><option>SC</option>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Previous School</label>
+        <input type="text" name="previousSchool" class="form-control">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4">Register Student</button>
+  </form>
+</div>
+
+<div class="card p-4">
+  <table class="table">
+    <thead><tr><th>Name</th><th>Reg. No.</th><th>Gender</th><th></th></tr></thead>
+    <tbody>
+      <% students.forEach(function(s) { %>
+        <tr>
+          <td><%= s.name %></td>
+          <td><%= s.regNo %></td>
+          <td><%= s.gender %></td>
+          <td class="text-end"><a href="/results/<%= s.id %>" class="btn btn-sm btn-outline-primary">Result</a></td>
+        </tr>
+      <% }) %>
+      <% if (!students.length) { %>
+        <tr><td colspan="4" class="text-muted text-center">No students registered yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

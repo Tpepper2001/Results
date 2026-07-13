@@ -3,7 +3,9 @@ function mapSchool(row) {
   return {
     id: row.id, name: row.name, code: row.code, address: row.address,
     phone: row.phone, email: row.email, session: row.session, term: row.term,
-    gradingScale: row.grading_scale, createdAt: row.created_at
+    gradingScale: row.grading_scale, createdAt: row.created_at,
+    logoUrl: row.logo_url || '', daysOpen: row.days_open || 0,
+    assessmentStructure: (row.assessment_structure && row.assessment_structure.length) ? row.assessment_structure : null
   };
 }
 
@@ -60,9 +62,9 @@ function mapScore(row) {
     id: row.id, schoolId: row.school_id, studentId: row.student_id,
     subjectId: row.subject_id, classId: row.class_id,
     session: row.session, term: row.term,
-    ca1: Number(row.ca1), ca2: Number(row.ca2), exam: Number(row.exam),
-    total: Number(row.total), grade: row.grade, remark: row.remark,
-    teacherId: row.teacher_id
+    components: row.components || {}, total: Number(row.total),
+    grade: row.grade, remark: row.remark, teacherId: row.teacher_id,
+    notOffering: !!row.not_offering
   };
 }
 
@@ -74,7 +76,9 @@ function mapPsychomotor(row) {
     handwriting: row.handwriting, drawing: row.drawing, sports: row.sports,
     musicalAbility: row.musical_ability, practicalSkills: row.practical_skills,
     verbalFluency: row.verbal_fluency, creativity: row.creativity,
-    formTeacherComment: row.form_teacher_comment || '', enteredBy: row.entered_by
+    formTeacherComment: row.form_teacher_comment || '', enteredBy: row.entered_by,
+    timesPresent: row.times_present || 0, timesAbsent: row.times_absent || 0,
+    principalRemark: row.principal_remark || ''
   };
 }
 

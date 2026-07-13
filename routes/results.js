@@ -3,6 +3,7 @@ const router = express.Router();
 const supabase = require('../db/supabase');
 const asyncHandler = require('../utils/asyncHandler');
 const { requireLogin } = require('../middleware/auth');
+const { getGrade, DEFAULT_ASSESSMENT_STRUCTURE } = require('../utils/grading');
 const { mapStudent, mapClass, mapSubject, mapScore, mapPsychomotor, PSYCHOMOTOR_SKILLS, PSYCHOMOTOR_RATING } = require('../utils/mappers');
 
 router.use(requireLogin);
@@ -24,7 +25,9 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
   if (req.session.user.role === 'teacher') {
     const { data: teachesRow } = await supabase.from('teacher_assignments')
       .select('id').eq('school_id', schoolId).eq('teacher_id', req.session.user.id).eq('class_id', student.classId).maybeSingle();
-    if (!teachesRow) {
+    const { data: formTeachesRow } = await supabase.from('form_teacher_assignments')
+      .select('id').eq('school_id', schoolId).eq('teacher_id', req.session.user.id).eq('class_id', student.classId).maybeSingle();
+    if (!teachesRow && !formTeachesRow) {
       req.flash('error', 'You do not teach this class.');
       return res.redirect('/teacher');
     }
@@ -32,6 +35,7 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
 
   const session = req.query.session || school.session;
   const term = req.query.term || school.term;
+  const structure = (school.assessmentStructure && school.assessmentStructure.length) ? school.assessmentStructure : DEFAULT_ASSESSMENT_STRUCTURE;
 
   const [
     { data: scoreRows, error: scErr },
@@ -51,19 +55,25 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
 
   const rows = scores.map(sc => ({
     subject: subjectMap[sc.subjectId] || 'Unknown',
-    ca1: sc.ca1, ca2: sc.ca2, exam: sc.exam, total: sc.total, grade: sc.grade, remark: sc.remark
+    components: sc.components, total: sc.total, grade: sc.grade, remark: sc.remark, notOffering: sc.notOffering
   })).sort((a, b) => a.subject.localeCompare(b.subject));
 
-  const totalScore = rows.reduce((sum, r) => sum + r.total, 0);
-  const average = rows.length ? (totalScore / rows.length).toFixed(2) : '0.00';
+  // Subjects marked "Not Offering" are shown on the sheet but excluded from
+  // totals, average, grade and class ranking.
+  const gradedRows = rows.filter(r => !r.notOffering);
+  const totalScore = gradedRows.reduce((sum, r) => sum + r.total, 0);
+  const average = gradedRows.length ? (totalScore / gradedRows.length) : 0;
+  const averageDisplay = average.toFixed(1);
+  const overallGrade = gradedRows.length ? getGrade(average, school.gradingScale) : null;
 
-  // Class position
+  // Class position (excluding Not Offering rows from each student's average)
   const classId = student.classId;
   const { data: classmateRows } = await supabase.from('students').select('id').eq('school_id', schoolId).eq('class_id', classId);
-  const { data: allScoresRows } = await supabase.from('scores').select('student_id, total').eq('school_id', schoolId).eq('class_id', classId).eq('session', session).eq('term', term);
+  const { data: allScoresRows } = await supabase.from('scores')
+    .select('student_id, total, not_offering').eq('school_id', schoolId).eq('class_id', classId).eq('session', session).eq('term', term);
 
   const totalsByStudent = {};
-  (allScoresRows || []).forEach(r => {
+  (allScoresRows || []).filter(r => !r.not_offering).forEach(r => {
     if (!totalsByStudent[r.student_id]) totalsByStudent[r.student_id] = { sum: 0, count: 0 };
     totalsByStudent[r.student_id].sum += Number(r.total);
     totalsByStudent[r.student_id].count += 1;
@@ -78,9 +88,9 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
   const psychomotor = psychoRow ? mapPsychomotor(psychoRow) : null;
 
   res.render('results/sheet', {
-    student, cls: mapClass(clsRow), school, session, term, rows, totalScore, average,
-    position, classSize: (classmateRows || []).length,
-    psychomotor, skills: PSYCHOMOTOR_SKILLS, rating: PSYCHOMOTOR_RATING
+    student, cls: mapClass(clsRow), school, session, term, rows, gradedRows, totalScore,
+    average: averageDisplay, overallGrade, position, classSize: (classmateRows || []).length,
+    psychomotor, skills: PSYCHOMOTOR_SKILLS, rating: PSYCHOMOTOR_RATING, structure
   });
 }));
 

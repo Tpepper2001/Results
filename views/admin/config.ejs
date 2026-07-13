@@ -3,6 +3,22 @@
 <h3 class="mb-4">School Configuration</h3>
 
 <div class="card p-4 mb-4">
+  <h5 class="mb-3">School Logo</h5>
+  <div class="d-flex align-items-center gap-3 mb-3">
+    <% if (school.logoUrl) { %>
+      <img src="<%= school.logoUrl %>" alt="Current logo" style="width:64px;height:64px;object-fit:contain;border-radius:8px;border:1px solid #eee;">
+    <% } else { %>
+      <span class="text-muted small">No logo uploaded yet.</span>
+    <% } %>
+  </div>
+  <form method="POST" action="/admin/config/logo" enctype="multipart/form-data" class="d-flex gap-2 align-items-center flex-wrap">
+    <input type="file" name="logo" accept="image/*" class="form-control" style="max-width:320px;" required>
+    <button type="submit" class="btn btn-outline-primary">Upload Logo</button>
+  </form>
+  <p class="text-muted small mt-2 mb-0">PNG or JPG, up to 2MB. Appears on printed result sheets.</p>
+</div>
+
+<div class="card p-4 mb-4">
   <h5 class="mb-3">School Details &amp; Session</h5>
   <form method="POST" action="/admin/config">
     <div class="row g-3">
@@ -22,11 +38,11 @@
         <label class="form-label">Address</label>
         <input type="text" name="address" class="form-control" value="<%= school.address %>">
       </div>
-      <div class="col-md-6">
+      <div class="col-md-4">
         <label class="form-label">Current Session</label>
         <input type="text" name="session" class="form-control" value="<%= school.session %>">
       </div>
-      <div class="col-md-6">
+      <div class="col-md-4">
         <label class="form-label">Current Term</label>
         <select name="term" class="form-select">
           <% ['1st Term','2nd Term','3rd Term'].forEach(function(t) { %>
@@ -34,20 +50,42 @@
           <% }) %>
         </select>
       </div>
+      <div class="col-md-4">
+        <label class="form-label">Days School Opened This Term</label>
+        <input type="number" name="daysOpen" class="form-control" min="0" value="<%= school.daysOpen || 0 %>">
+      </div>
     </div>
     <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
   </form>
 </div>
 
 <div class="card p-4 mb-4">
-  <h5 class="mb-3">Score Weighting</h5>
-  <p class="text-muted">Fixed as requested: 1st CA (max 20) + 2nd CA (max 20) + Exam (max 60) = Total (100).</p>
-  <div class="d-flex gap-4">
-    <div><strong>1st CA:</strong> 20</div>
-    <div><strong>2nd CA:</strong> 20</div>
-    <div><strong>Exam:</strong> 60</div>
-    <div><strong>Total:</strong> 100</div>
-  </div>
+  <h5 class="mb-3">Assessment Structure</h5>
+  <p class="text-muted small">Choose 1, 2 or 3 CA components plus exactly 1 Exam component. Max scores must add up to exactly 100. This applies to newly entered/edited scores going forward — it does not change scores already saved.</p>
+  <form method="POST" action="/admin/config/assessment">
+    <% const findCA = (n) => assessmentStructure.filter(function(c){ return c.type === 'ca'; })[n-1]; %>
+    <table class="table align-middle">
+      <thead><tr><th style="width:70px;">Enabled</th><th>Component</th><th>Label</th><th style="width:140px;">Max Score</th></tr></thead>
+      <tbody>
+        <% for (let n = 1; n <= 3; n++) { const ca = findCA(n); %>
+          <tr>
+            <td class="text-center"><input type="checkbox" name="caEnabled" value="<%= n %>" <%= ca ? 'checked' : '' %>></td>
+            <td>CA <%= n %></td>
+            <td><input type="text" name="caLabel<%= n %>" class="form-control" value="<%= ca ? ca.label : (n===1 ? '1st CA' : n===2 ? '2nd CA' : '3rd CA') %>"></td>
+            <td><input type="number" name="caMax<%= n %>" class="form-control" min="1" max="100" value="<%= ca ? ca.max : '' %>"></td>
+          </tr>
+        <% } %>
+        <% const examComp = assessmentStructure.filter(function(c){ return c.type === 'exam'; })[0]; %>
+        <tr>
+          <td class="text-center text-muted small">Always on</td>
+          <td>Exam</td>
+          <td><input type="text" name="examLabel" class="form-control" value="<%= examComp ? examComp.label : 'Exam' %>"></td>
+          <td><input type="number" name="examMax" class="form-control" min="1" max="100" value="<%= examComp ? examComp.max : '' %>"></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Save Assessment Structure</button>
+  </form>
 </div>
 
 <div class="card p-4">

@@ -178,3 +178,49 @@ create index if not exists idx_psycho_school on psychomotor_scores(school_id);
 create index if not exists idx_psycho_student on psychomotor_scores(student_id);
 
 alter table psychomotor_scores enable row level security;
+
+-- ==========================================
+-- MIGRATION: Attendance, remarks, school logo
+-- Run this in Supabase SQL Editor. Safe to re-run.
+-- ==========================================
+
+-- School logo + attendance total for the term
+alter table schools add column if not exists logo_url text default '';
+alter table schools add column if not exists days_open integer default 0;
+
+-- Per-student attendance + principal's remark, alongside psychomotor skills
+-- (one row per student per session/term already exists in psychomotor_scores)
+alter table psychomotor_scores add column if not exists times_present integer default 0;
+alter table psychomotor_scores add column if not exists times_absent integer default 0;
+alter table psychomotor_scores add column if not exists principal_remark text default '';
+
+-- Storage bucket for school logos (public read, so logos display on printed
+-- result sheets without needing signed URLs). Uploads only happen server-side
+-- via the service_role key, which bypasses storage policies, so no extra
+-- policy is required.
+insert into storage.buckets (id, name, public)
+values ('school-logos', 'school-logos', true)
+on conflict (id) do nothing;
+
+-- ==========================================
+-- MIGRATION: Customizable assessment structure, "Not Offering" flag,
+-- form teachers adding students / grading unassigned subjects.
+-- Run this in Supabase SQL Editor. Safe to re-run.
+-- ==========================================
+
+-- Per-school customizable assessment structure: 1-3 CA components + exactly
+-- 1 Exam component, whose max scores must sum to 100. Validated in the app
+-- (see utils/grading.js validateAssessmentStructure) before being saved here.
+alter table schools add column if not exists assessment_structure jsonb not null default '[
+  {"key":"ca1","label":"1st CA","type":"ca","max":20},
+  {"key":"ca2","label":"2nd CA","type":"ca","max":20},
+  {"key":"exam","label":"Exam","type":"exam","max":60}
+]'::jsonb;
+
+-- Dynamic score components (e.g. {"ca1": 18, "ca2": 17, "exam": 55}) replacing
+-- the old fixed ca1/ca2/exam columns (which remain for backward compatibility
+-- but are no longer written to). "not_offering" lets a subject teacher mark a
+-- student as not taking that subject, excluding them from that subject's
+-- rows in totals/averages/ranking.
+alter table scores add column if not exists components jsonb not null default '{}'::jsonb;
+alter table scores add column if not exists not_offering boolean not null default false;

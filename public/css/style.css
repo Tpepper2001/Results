@@ -37,3 +37,107 @@ table.result-sheet th, table.result-sheet td {
   body { background: #fff; }
   .container { max-width: 100% !important; }
 }
+
+/* ===== Report Card Styling ===== */
+:root {
+  --report-accent: #4c3fc9;
+}
+
+.report-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  border-bottom: 3px solid var(--report-accent);
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+.report-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.report-school-name {
+  color: var(--report-accent);
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+.report-title {
+  color: var(--report-accent);
+  font-weight: 600;
+  letter-spacing: .04em;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  margin-top: .35rem;
+}
+
+.report-info-box {
+  background: #f7f7fb;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  height: 100%;
+}
+.report-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  padding: 0.15rem 0;
+}
+.report-info-label {
+  color: #888;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.report-info-value {
+  font-weight: 600;
+}
+
+.report-subjects-table thead th {
+  background: var(--report-accent);
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  border: none;
+}
+.report-subjects-table tbody tr:nth-child(even) { background: #f7f7fb; }
+.report-subjects-table td, .report-subjects-table th { vertical-align: middle; }
+
+.trait-box {
+  background: #f7f7fb;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  min-width: 120px;
+}
+.trait-label {
+  font-size: 0.68rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.trait-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--report-accent);
+}
+
+.remark-box {
+  background: #f7f7fb;
+  border-radius: 8px;
+  padding: 1rem;
+  height: 100%;
+}
+.remark-box .remark-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: .03em;
+  margin-bottom: .35rem;
+}
+
+@media print {
+  .report-info-box, .trait-box, .remark-box { background: #f7f7fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .report-subjects-table thead th { background: var(--report-accent) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

@@ -5,125 +5,149 @@
 </div>
 
 <div class="card p-4">
-  <!-- School Header -->
-  <div class="result-header">
-    <h3 class="mb-0"><%= school.name %></h3>
-    <p class="mb-0"><%= school.address %></p>
-    <p class="mb-0"><%= school.phone %><% if (school.email) { %> &middot; <%= school.email %><% } %></p>
-    <h5 class="mt-3 mb-0">STUDENT REPORT CARD</h5>
-    <p class="mb-0"><%= session %> Academic Session &middot; <%= term %></p>
+
+  <!-- Header: logo + school name -->
+  <div class="report-header-bar">
+    <% if (school.logoUrl) { %>
+      <img src="<%= school.logoUrl %>" class="report-logo" alt="School logo">
+    <% } %>
+    <div>
+      <h3 class="report-school-name mb-0"><%= school.name %></h3>
+      <p class="mb-0 text-muted small"><%= school.address %><% if (school.phone) { %> &middot; <%= school.phone %><% } %></p>
+      <div class="report-title">Terminal Academic Report</div>
+    </div>
   </div>
 
-  <!-- Student Bio -->
-  <div class="row mb-2 g-2">
-    <div class="col-md-4"><strong>Name:</strong> <%= student.name %></div>
-    <div class="col-md-4"><strong>Reg. No.:</strong> <%= student.regNo %></div>
-    <div class="col-md-4"><strong>Class:</strong> <%= cls ? cls.name : '-' %></div>
-    <div class="col-md-4"><strong>Gender:</strong> <%= student.gender || '-' %></div>
-    <div class="col-md-4"><strong>Date of Birth:</strong> <%= student.dob || '-' %></div>
-    <div class="col-md-4"><strong>Position:</strong> <%= rows.length ? position + ' / ' + classSize : '-' %></div>
-    <% if (student.bloodGroup) { %><div class="col-md-3"><strong>Blood Group:</strong> <%= student.bloodGroup %></div><% } %>
-    <% if (student.genotype) { %><div class="col-md-3"><strong>Genotype:</strong> <%= student.genotype %></div><% } %>
-    <% if (student.religion) { %><div class="col-md-3"><strong>Religion:</strong> <%= student.religion %></div><% } %>
-    <% if (student.stateOfOrigin) { %><div class="col-md-3"><strong>State of Origin:</strong> <%= student.stateOfOrigin %></div><% } %>
-    <% if (student.fatherName) { %><div class="col-md-4"><strong>Father:</strong> <%= student.fatherName %><% if (student.fatherPhone) { %> (<%= student.fatherPhone %>)<% } %></div><% } %>
-    <% if (student.motherName) { %><div class="col-md-4"><strong>Mother:</strong> <%= student.motherName %><% if (student.motherPhone) { %> (<%= student.motherPhone %>)<% } %></div><% } %>
-    <% if (student.homeAddress) { %><div class="col-md-8"><strong>Address:</strong> <%= student.homeAddress %></div><% } %>
+  <!-- Student info + performance summary -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="report-info-box">
+        <div class="report-info-row"><span class="report-info-label">Student</span><span class="report-info-value"><%= student.name %></span></div>
+        <div class="report-info-row"><span class="report-info-label">Reg. No.</span><span class="report-info-value"><%= student.regNo %></span></div>
+        <div class="report-info-row"><span class="report-info-label">Class</span><span class="report-info-value"><%= cls ? cls.name : '-' %></span></div>
+        <div class="report-info-row"><span class="report-info-label">Days School Opened</span><span class="report-info-value"><%= school.daysOpen || '-' %></span></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="report-info-box">
+        <div class="report-info-row"><span class="report-info-label">Average</span><span class="report-info-value"><%= gradedRows.length ? average + '%' : '-' %></span></div>
+        <div class="report-info-row"><span class="report-info-label">Grade</span><span class="report-info-value"><%= overallGrade ? overallGrade.grade : '-' %></span></div>
+        <div class="report-info-row"><span class="report-info-label">Times Present</span><span class="report-info-value"><%= psychomotor ? psychomotor.timesPresent : '-' %></span></div>
+        <div class="report-info-row"><span class="report-info-label">Times Absent</span><span class="report-info-value"><%= psychomotor ? psychomotor.timesAbsent : '-' %></span></div>
+      </div>
+    </div>
   </div>
-  <hr>
 
-  <!-- Academic Scores -->
-  <h6 class="mt-2 mb-2">Academic Performance</h6>
-  <table class="table table-bordered result-sheet">
-    <thead class="table-light">
+  <!-- Extra bio details, shown only if filled in -->
+  <% const bioBits = []; %>
+  <% if (student.gender) bioBits.push(['Gender', student.gender]); %>
+  <% if (student.dob) bioBits.push(['Date of Birth', student.dob]); %>
+  <% if (gradedRows.length) bioBits.push(['Position', position + ' of ' + classSize]); %>
+  <% if (student.bloodGroup) bioBits.push(['Blood Group', student.bloodGroup]); %>
+  <% if (student.genotype) bioBits.push(['Genotype', student.genotype]); %>
+  <% if (student.religion) bioBits.push(['Religion', student.religion]); %>
+  <% if (student.stateOfOrigin) bioBits.push(['State of Origin', student.stateOfOrigin]); %>
+  <% if (bioBits.length) { %>
+    <div class="row g-2 mb-4">
+      <% bioBits.forEach(function(b) { %>
+        <div class="col-md-3 col-6"><span class="text-muted small"><%= b[0] %>:</span> <strong class="small"><%= b[1] %></strong></div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Academic Subjects -->
+  <table class="table table-bordered report-subjects-table">
+    <thead>
       <tr>
-        <th>Subject</th>
-        <th class="text-center">1st CA (20)</th>
-        <th class="text-center">2nd CA (20)</th>
-        <th class="text-center">Exam (60)</th>
-        <th class="text-center">Total (100)</th>
+        <th>Academic Subjects</th>
+        <% structure.forEach(function(comp) { %>
+          <th class="text-center"><%= comp.label %> (<%= comp.max %>)</th>
+        <% }) %>
+        <th class="text-center">Total</th>
         <th class="text-center">Grade</th>
-        <th>Remark</th>
       </tr>
     </thead>
     <tbody>
       <% rows.forEach(function(r) { %>
         <tr>
           <td><%= r.subject %></td>
-          <td class="text-center"><%= r.ca1 %></td>
-          <td class="text-center"><%= r.ca2 %></td>
-          <td class="text-center"><%= r.exam %></td>
-          <td class="text-center"><strong><%= r.total %></strong></td>
-          <td class="text-center"><%= r.grade %></td>
-          <td><%= r.remark %></td>
+          <% if (r.notOffering) { %>
+            <td colspan="<%= structure.length + 2 %>" class="text-center text-muted fst-italic">Not Offering</td>
+          <% } else { %>
+            <% structure.forEach(function(comp) { %>
+              <td class="text-center"><%= (r.components && r.components[comp.key] !== undefined) ? r.components[comp.key] : '-' %></td>
+            <% }) %>
+            <td class="text-center"><strong><%= r.total %></strong></td>
+            <td class="text-center"><%= r.grade %></td>
+          <% } %>
         </tr>
       <% }) %>
       <% if (!rows.length) { %>
-        <tr><td colspan="7" class="text-center text-muted">No scores recorded yet.</td></tr>
+        <tr><td colspan="<%= structure.length + 3 %>" class="text-center text-muted">No scores recorded yet.</td></tr>
       <% } %>
     </tbody>
-    <% if (rows.length) { %>
-    <tfoot>
-      <tr class="table-light">
-        <td colspan="4" class="text-end"><strong>Total Score</strong></td>
-        <td class="text-center"><strong><%= totalScore %></strong></td>
-        <td colspan="2"><strong>Average: <%= average %></strong></td>
-      </tr>
-    </tfoot>
-    <% } %>
   </table>
 
   <!-- Psychomotor Skills -->
   <% if (psychomotor) { %>
-    <h6 class="mt-3 mb-2">Psychomotor Skills
-      <small class="text-muted fw-normal ms-2">5=Excellent &nbsp; 4=Very Good &nbsp; 3=Good &nbsp; 2=Fair &nbsp; 1=Poor</small>
-    </h6>
-    <table class="table table-bordered result-sheet">
-      <thead class="table-light">
-        <tr>
-          <% skills.forEach(function(sk) { %><th class="text-center"><%= sk.label %></th><% }) %>
-          <th>Form Teacher's Comment</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <% skills.forEach(function(sk) { %>
-            <%
-              const keyMap = {
-                handwriting: 'handwriting', drawing: 'drawing', sports: 'sports',
-                musical_ability: 'musicalAbility', practical_skills: 'practicalSkills',
-                verbal_fluency: 'verbalFluency', creativity: 'creativity'
-              };
-              const val = psychomotor[keyMap[sk.key]];
-            %>
-            <td class="text-center">
-              <% if (val) { %>
-                <strong><%= val %></strong><br>
-                <small class="text-muted"><%= rating[val] %></small>
-              <% } else { %>
-                <span class="text-muted">-</span>
-              <% } %>
-            </td>
-          <% }) %>
-          <td><%= psychomotor.formTeacherComment || '-' %></td>
-        </tr>
-      </tbody>
-    </table>
+    <h6 class="mt-4 mb-2">Psychomotor Skills</h6>
+    <div class="d-flex flex-wrap gap-2 mb-2">
+      <%
+        const keyMap = {
+          handwriting: 'handwriting', drawing: 'drawing', sports: 'sports',
+          musical_ability: 'musicalAbility', practical_skills: 'practicalSkills',
+          verbal_fluency: 'verbalFluency', creativity: 'creativity'
+        };
+      %>
+      <% skills.forEach(function(sk) { %>
+        <% const val = psychomotor[keyMap[sk.key]]; %>
+        <div class="trait-box">
+          <div class="trait-label"><%= sk.label %></div>
+          <div class="trait-value"><%= val ? val + ' - ' + rating[val] : '-' %></div>
+        </div>
+      <% }) %>
+    </div>
   <% } %>
 
-  <!-- Signature Section -->
+  <!-- Remarks -->
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <div class="remark-box">
+        <div class="remark-title">Form Tutor's Remark</div>
+        <p class="mb-0"><%= (psychomotor && psychomotor.formTeacherComment) ? psychomotor.formTeacherComment : 'No remark yet.' %></p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="remark-box">
+        <div class="remark-title">Principal's Remark</div>
+        <% if (currentUser.role === 'admin') { %>
+          <form method="POST" action="/admin/results/<%= student.id %>/remark">
+            <input type="hidden" name="session" value="<%= session %>">
+            <input type="hidden" name="term" value="<%= term %>">
+            <textarea name="principalRemark" class="form-control form-control-sm mb-2" rows="2"
+              placeholder="Write the principal's remark..."><%= psychomotor ? psychomotor.principalRemark : '' %></textarea>
+            <button type="submit" class="btn btn-sm btn-outline-primary no-print">Save Remark</button>
+          </form>
+        <% } else { %>
+          <p class="mb-0"><%= (psychomotor && psychomotor.principalRemark) ? psychomotor.principalRemark : 'No remark yet.' %></p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signatures -->
   <div class="row mt-5">
     <div class="col-md-4">
       <p>_________________________</p>
-      <p class="text-muted">Form Teacher's Signature</p>
+      <p class="text-muted small">Form Teacher</p>
     </div>
     <div class="col-md-4">
       <p>_________________________</p>
-      <p class="text-muted">Class Teacher's Signature</p>
+      <p class="text-muted small">Class Teacher</p>
     </div>
     <div class="col-md-4">
       <p>_________________________</p>
-      <p class="text-muted">Principal / Head Teacher</p>
+      <p class="text-muted small">Principal / Head Teacher</p>
     </div>
   </div>
 </div>

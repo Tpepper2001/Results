@@ -1,14 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
 const supabase = require('../db/supabase');
 const asyncHandler = require('../utils/asyncHandler');
 const { requireLogin, requireRole } = require('../middleware/auth');
-const { DEFAULT_GRADING_SCALE } = require('../utils/grading');
+const { DEFAULT_GRADING_SCALE, DEFAULT_ASSESSMENT_STRUCTURE, validateAssessmentStructure } = require('../utils/grading');
 const {
   mapSchool, mapClass, mapSubject, mapStudent, mapUser,
   mapAssignment, mapFormTeacherAssignment
 } = require('../utils/mappers');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) return cb(new Error('Only image files are allowed'));
+    cb(null, true);
+  }
+});
 
 router.use(requireLogin, requireRole('admin'));
 
@@ -33,17 +43,47 @@ router.get('/', asyncHandler(async (req, res) => {
 
 // ---------- School Configuration ----------
 router.get('/config', (req, res) => {
-  res.render('admin/config', { gradingScale: req.session.school.gradingScale || DEFAULT_GRADING_SCALE });
+  res.render('admin/config', {
+    gradingScale: req.session.school.gradingScale || DEFAULT_GRADING_SCALE,
+    assessmentStructure: (req.session.school.assessmentStructure && req.session.school.assessmentStructure.length)
+      ? req.session.school.assessmentStructure : DEFAULT_ASSESSMENT_STRUCTURE
+  });
 });
 
 router.post('/config', asyncHandler(async (req, res) => {
-  const { schoolName, address, phone, email, session, term } = req.body;
+  const { schoolName, address, phone, email, session, term, daysOpen } = req.body;
   const { error } = await supabase.from('schools').update({
-    name: schoolName, address, phone, email, session, term
+    name: schoolName, address, phone, email, session, term,
+    days_open: Number(daysOpen) || 0
   }).eq('id', req.session.school.id);
   if (error) throw error;
   await refreshSchoolSession(req);
   req.flash('success', 'School configuration updated.');
+  res.redirect('/admin/config');
+}));
+
+router.post('/config/logo', upload.single('logo'), asyncHandler(async (req, res) => {
+  if (!req.file) {
+    req.flash('error', 'Please choose an image file to upload.');
+    return res.redirect('/admin/config');
+  }
+  const schoolId = req.session.school.id;
+  const ext = (req.file.originalname.split('.').pop() || 'png').toLowerCase();
+  const path = `${schoolId}/logo.${ext}`;
+
+  const { error: uploadErr } = await supabase.storage.from('school-logos')
+    .upload(path, req.file.buffer, { contentType: req.file.mimetype, upsert: true });
+  if (uploadErr) throw uploadErr;
+
+  const { data: publicUrlData } = supabase.storage.from('school-logos').getPublicUrl(path);
+  // Cache-bust so the browser picks up a re-uploaded logo immediately
+  const logoUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
+
+  const { error: updateErr } = await supabase.from('schools').update({ logo_url: logoUrl }).eq('id', schoolId);
+  if (updateErr) throw updateErr;
+
+  await refreshSchoolSession(req);
+  req.flash('success', 'School logo updated.');
   res.redirect('/admin/config');
 }));
 
@@ -60,6 +100,46 @@ router.post('/config/grading', asyncHandler(async (req, res) => {
   if (error) throw error;
   await refreshSchoolSession(req);
   req.flash('success', 'Grading scale updated.');
+  res.redirect('/admin/config');
+}));
+
+router.post('/config/assessment', asyncHandler(async (req, res) => {
+  const { caEnabled, caLabel1, caLabel2, caLabel3, caMax1, caMax2, caMax3, examLabel, examMax } = req.body;
+  const enabledSet = new Set([].concat(caEnabled || []).map(String));
+
+  const caLabels = { 1: caLabel1, 2: caLabel2, 3: caLabel3 };
+  const caMaxes = { 1: caMax1, 2: caMax2, 3: caMax3 };
+
+  const structure = [];
+  let caIndex = 0;
+  [1, 2, 3].forEach(n => {
+    if (enabledSet.has(String(n))) {
+      caIndex++;
+      structure.push({
+        key: 'ca' + caIndex,
+        label: (caLabels[n] && caLabels[n].trim()) || `CA ${caIndex}`,
+        type: 'ca',
+        max: Number(caMaxes[n]) || 0
+      });
+    }
+  });
+  structure.push({
+    key: 'exam',
+    label: (examLabel && examLabel.trim()) || 'Exam',
+    type: 'exam',
+    max: Number(examMax) || 0
+  });
+
+  const validationError = validateAssessmentStructure(structure);
+  if (validationError) {
+    req.flash('error', validationError);
+    return res.redirect('/admin/config');
+  }
+
+  const { error: updateErr } = await supabase.from('schools').update({ assessment_structure: structure }).eq('id', req.session.school.id);
+  if (updateErr) throw updateErr;
+  await refreshSchoolSession(req);
+  req.flash('success', 'Assessment structure updated. Note: this does not retroactively change previously saved scores.');
   res.redirect('/admin/config');
 }));
 
@@ -323,6 +403,43 @@ router.post('/teachers/:id/assign-form', asyncHandler(async (req, res) => {
   if (error) throw error;
   req.flash('success', 'Form teacher assigned.');
   res.redirect('/admin/teachers');
+}));
+
+// ---------- Principal's remark on a student's result ----------
+router.post('/results/:studentId/remark', asyncHandler(async (req, res) => {
+  const schoolId = req.session.school.id;
+  const studentId = req.params.studentId;
+  const school = req.session.school;
+  const { principalRemark, session, term } = req.body;
+  const useSession = session || school.session;
+  const useTerm = term || school.term;
+
+  const { data: studentRow, error: stErr } = await supabase.from('students')
+    .select('class_id').eq('id', studentId).eq('school_id', schoolId).maybeSingle();
+  if (stErr) throw stErr;
+  if (!studentRow) {
+    req.flash('error', 'Student not found.');
+    return res.redirect('/admin/results');
+  }
+
+  const { data: existing, error: exErr } = await supabase.from('psychomotor_scores')
+    .select('id').eq('student_id', studentId).eq('session', useSession).eq('term', useTerm).maybeSingle();
+  if (exErr) throw exErr;
+
+  if (existing) {
+    const { error } = await supabase.from('psychomotor_scores')
+      .update({ principal_remark: principalRemark || '' }).eq('id', existing.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from('psychomotor_scores').insert({
+      school_id: schoolId, student_id: studentId, class_id: studentRow.class_id,
+      session: useSession, term: useTerm, principal_remark: principalRemark || ''
+    });
+    if (error) throw error;
+  }
+
+  req.flash('success', "Principal's remark saved.");
+  res.redirect(`/results/${studentId}?session=${encodeURIComponent(useSession)}&term=${encodeURIComponent(useTerm)}`);
 }));
 
 // ---------- Results overview ----------

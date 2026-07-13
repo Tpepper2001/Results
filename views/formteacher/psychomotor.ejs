@@ -1,6 +1,6 @@
 <%- include('../partials/header', { title: 'Psychomotor Skills' }) %>
 
-<h3 class="mb-1">Psychomotor Skills — <%= cls.name %></h3>
+<h3 class="mb-1">Psychomotor Skills &amp; Attendance — <%= cls.name %></h3>
 <p class="text-muted mb-4"><%= school.session %> &middot; <%= school.term %></p>
 
 <div class="card p-3 mb-3">
@@ -18,8 +18,10 @@
         <thead>
           <tr>
             <th style="min-width:160px;">Student</th>
+            <th style="min-width:70px;" class="text-center">Present</th>
+            <th style="min-width:70px;" class="text-center">Absent</th>
             <% skills.forEach(function(sk) { %><th style="min-width:90px;" class="text-center"><%= sk.label %></th><% }) %>
-            <th style="min-width:160px;">Comment</th>
+            <th style="min-width:160px;">Form Teacher's Remark</th>
           </tr>
         </thead>
         <tbody>
@@ -30,6 +32,8 @@
                 <%= st.name %>
                 <input type="hidden" name="studentIds" value="<%= st.id %>">
               </td>
+              <td><input type="number" name="times_present" class="form-control form-control-sm" min="0" value="<%= ex.timesPresent || '' %>"></td>
+              <td><input type="number" name="times_absent" class="form-control form-control-sm" min="0" value="<%= ex.timesAbsent || '' %>"></td>
               <% skills.forEach(function(sk) { %>
                 <td class="text-center">
                   <select name="<%= sk.key %>" class="form-select form-select-sm">
@@ -42,19 +46,19 @@
               <% }) %>
               <td>
                 <input type="text" name="form_teacher_comment" class="form-control form-control-sm"
-                  value="<%= ex.formTeacherComment || '' %>" placeholder="Optional comment">
+                  value="<%= ex.formTeacherComment || '' %>" placeholder="Optional remark">
               </td>
             </tr>
           <% }) %>
           <% if (!students.length) { %>
-            <tr><td colspan="<%= skills.length + 2 %>" class="text-muted text-center">No students in this class yet.</td></tr>
+            <tr><td colspan="<%= skills.length + 4 %>" class="text-muted text-center">No students in this class yet.</td></tr>
           <% } %>
         </tbody>
       </table>
     </div>
   </div>
   <% if (students.length) { %>
-    <button type="submit" class="btn btn-primary mt-3">Save Psychomotor Scores</button>
+    <button type="submit" class="btn btn-primary mt-3">Save Psychomotor &amp; Attendance</button>
   <% } %>
 </form>
 

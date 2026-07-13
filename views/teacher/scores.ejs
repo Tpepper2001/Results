@@ -1,42 +1,54 @@
 <%- include('../partials/header', { title: 'Enter Scores' }) %>
 
 <h3 class="mb-1"><%= subject.name %> &mdash; <%= cls.name %></h3>
-<p class="text-muted mb-4">Enter 1st CA (max <%= SCORE_MAX.ca1 %>), 2nd CA (max <%= SCORE_MAX.ca2 %>) and Exam (max <%= SCORE_MAX.exam %>). Total is out of <%= SCORE_MAX.total %> and is calculated automatically.</p>
+<p class="text-muted mb-4">
+  Enter <% structure.forEach(function(comp, i) { %><%= comp.label %> (max <%= comp.max %>)<%= i < structure.length - 1 ? ', ' : '' %><% }) %>.
+  Total is out of 100 and is calculated automatically. Tick "Not Offering" for a student who is not taking this subject.
+</p>
 
-<form method="POST" action="/teacher/scores">
+<form method="POST" action="<%= postAction %>">
   <input type="hidden" name="classId" value="<%= classId %>">
   <input type="hidden" name="subjectId" value="<%= subjectId %>">
 
   <div class="card p-3">
-    <table class="table align-middle">
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th style="width:110px;">1st CA (/<%= SCORE_MAX.ca1 %>)</th>
-          <th style="width:110px;">2nd CA (/<%= SCORE_MAX.ca2 %>)</th>
-          <th style="width:110px;">Exam (/<%= SCORE_MAX.exam %>)</th>
-          <th style="width:100px;">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% students.forEach(function(st) { %>
-          <% const sc = existingScores[st.id]; %>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
           <tr>
-            <td>
-              <%= st.name %>
-              <input type="hidden" name="studentIds" value="<%= st.id %>">
-            </td>
-            <td><input type="number" name="ca1" class="form-control" min="0" max="<%= SCORE_MAX.ca1 %>" step="0.5" value="<%= sc.ca1 %>"></td>
-            <td><input type="number" name="ca2" class="form-control" min="0" max="<%= SCORE_MAX.ca2 %>" step="0.5" value="<%= sc.ca2 %>"></td>
-            <td><input type="number" name="exam" class="form-control" min="0" max="<%= SCORE_MAX.exam %>" step="0.5" value="<%= sc.exam %>"></td>
-            <td class="text-muted"><%= sc.total || 0 %></td>
+            <th>Student</th>
+            <% structure.forEach(function(comp) { %>
+              <th style="width:110px;"><%= comp.label %> (/<%= comp.max %>)</th>
+            <% }) %>
+            <th style="width:90px;">Total</th>
+            <th style="width:110px;" class="text-center">Not Offering</th>
           </tr>
-        <% }) %>
-        <% if (!students.length) { %>
-          <tr><td colspan="5" class="text-muted text-center">No students registered in this class yet.</td></tr>
-        <% } %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% students.forEach(function(st) { %>
+            <% const ex = existingScores[st.id]; const comps = ex.components || {}; %>
+            <tr>
+              <td>
+                <%= st.name %>
+                <input type="hidden" name="studentIds" value="<%= st.id %>">
+              </td>
+              <% structure.forEach(function(comp) { %>
+                <td>
+                  <input type="number" name="comp_<%= comp.key %>" class="form-control" min="0" max="<%= comp.max %>" step="0.5"
+                    value="<%= comps[comp.key] !== undefined ? comps[comp.key] : '' %>" <%= ex.notOffering ? 'disabled' : '' %>>
+                </td>
+              <% }) %>
+              <td class="text-muted"><%= ex.notOffering ? 'N/A' : (ex.total || 0) %></td>
+              <td class="text-center">
+                <input type="checkbox" name="notOfferingIds" value="<%= st.id %>" <%= ex.notOffering ? 'checked' : '' %>>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!students.length) { %>
+            <tr><td colspan="<%= structure.length + 3 %>" class="text-muted text-center">No students registered in this class yet.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <% if (students.length) { %>

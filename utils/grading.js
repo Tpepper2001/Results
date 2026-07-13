@@ -15,7 +15,37 @@ function getGrade(total, gradingScale) {
   return found || { grade: '-', remark: '-' };
 }
 
-// CA1 max 20, CA2 max 20, Exam max 60 => total max 100 (fixed weighting as requested)
-const SCORE_MAX = { ca1: 20, ca2: 20, exam: 60, total: 100 };
+// Default assessment structure: 1st CA (20) + 2nd CA (20) + Exam (60) = 100.
+// Schools can customize this to 1-3 CA components + exactly 1 Exam component,
+// as long as all max scores sum to 100.
+const DEFAULT_ASSESSMENT_STRUCTURE = [
+  { key: 'ca1', label: '1st CA', type: 'ca', max: 20 },
+  { key: 'ca2', label: '2nd CA', type: 'ca', max: 20 },
+  { key: 'exam', label: 'Exam', type: 'exam', max: 60 }
+];
 
-module.exports = { DEFAULT_GRADING_SCALE, getGrade, SCORE_MAX };
+// Validates a proposed assessment structure. Returns an error message string
+// if invalid, or null if valid.
+function validateAssessmentStructure(structure) {
+  if (!Array.isArray(structure) || !structure.length) {
+    return 'Assessment structure cannot be empty.';
+  }
+  const caCount = structure.filter(c => c.type === 'ca').length;
+  const examCount = structure.filter(c => c.type === 'exam').length;
+  if (caCount < 1 || caCount > 3) {
+    return 'You must have between 1 and 3 CA components.';
+  }
+  if (examCount !== 1) {
+    return 'You must have exactly 1 Exam component.';
+  }
+  const sum = structure.reduce((s, c) => s + (Number(c.max) || 0), 0);
+  if (sum !== 100) {
+    return `Component max scores must add up to exactly 100 (currently ${sum}).`;
+  }
+  if (structure.some(c => !c.key || !c.label || Number(c.max) <= 0)) {
+    return 'Every component needs a label and a max score greater than 0.';
+  }
+  return null;
+}
+
+module.exports = { DEFAULT_GRADING_SCALE, DEFAULT_ASSESSMENT_STRUCTURE, getGrade, validateAssessmentStructure };
