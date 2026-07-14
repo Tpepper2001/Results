@@ -19,7 +19,10 @@ function mapUser(row) {
 
 function mapClass(row) {
   if (!row) return null;
-  return { id: row.id, schoolId: row.school_id, name: row.name };
+  return {
+    id: row.id, schoolId: row.school_id, name: row.name,
+    assessmentStructure: (row.assessment_structure && row.assessment_structure.length) ? row.assessment_structure : null
+  };
 }
 
 function mapSubject(row) {

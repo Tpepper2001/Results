@@ -44,9 +44,7 @@ router.get('/', asyncHandler(async (req, res) => {
 // ---------- School Configuration ----------
 router.get('/config', (req, res) => {
   res.render('admin/config', {
-    gradingScale: req.session.school.gradingScale || DEFAULT_GRADING_SCALE,
-    assessmentStructure: (req.session.school.assessmentStructure && req.session.school.assessmentStructure.length)
-      ? req.session.school.assessmentStructure : DEFAULT_ASSESSMENT_STRUCTURE
+    gradingScale: req.session.school.gradingScale || DEFAULT_GRADING_SCALE
   });
 });
 
@@ -103,7 +101,41 @@ router.post('/config/grading', asyncHandler(async (req, res) => {
   res.redirect('/admin/config');
 }));
 
-router.post('/config/assessment', asyncHandler(async (req, res) => {
+// ---------- Classes ----------
+router.get('/classes', asyncHandler(async (req, res) => {
+  const { data, error } = await supabase.from('classes').select('*').eq('school_id', req.session.school.id).order('name');
+  if (error) throw error;
+  res.render('admin/classes', { classes: (data || []).map(mapClass) });
+}));
+
+router.post('/classes', asyncHandler(async (req, res) => {
+  const { name } = req.body;
+  if (name && name.trim()) {
+    const { error } = await supabase.from('classes').insert({ school_id: req.session.school.id, name: name.trim() });
+    if (error) throw error;
+    req.flash('success', 'Class added.');
+  }
+  res.redirect('/admin/classes');
+}));
+
+router.post('/classes/:id/delete', asyncHandler(async (req, res) => {
+  const { error } = await supabase.from('classes').delete().eq('id', req.params.id).eq('school_id', req.session.school.id);
+  if (error) throw error;
+  req.flash('success', 'Class removed.');
+  res.redirect('/admin/classes');
+}));
+
+router.get('/classes/:id/assessment', asyncHandler(async (req, res) => {
+  const { data: clsRow, error } = await supabase.from('classes').select('*').eq('id', req.params.id).eq('school_id', req.session.school.id).single();
+  if (error) throw error;
+  const cls = mapClass(clsRow);
+  res.render('admin/class-assessment', {
+    cls, structure: cls.assessmentStructure || DEFAULT_ASSESSMENT_STRUCTURE
+  });
+}));
+
+router.post('/classes/:id/assessment', asyncHandler(async (req, res) => {
+  const classId = req.params.id;
   const { caEnabled, caLabel1, caLabel2, caLabel3, caMax1, caMax2, caMax3, examLabel, examMax } = req.body;
   const enabledSet = new Set([].concat(caEnabled || []).map(String));
 
@@ -133,37 +165,14 @@ router.post('/config/assessment', asyncHandler(async (req, res) => {
   const validationError = validateAssessmentStructure(structure);
   if (validationError) {
     req.flash('error', validationError);
-    return res.redirect('/admin/config');
+    return res.redirect(`/admin/classes/${classId}/assessment`);
   }
 
-  const { error: updateErr } = await supabase.from('schools').update({ assessment_structure: structure }).eq('id', req.session.school.id);
-  if (updateErr) throw updateErr;
-  await refreshSchoolSession(req);
-  req.flash('success', 'Assessment structure updated. Note: this does not retroactively change previously saved scores.');
-  res.redirect('/admin/config');
-}));
-
-// ---------- Classes ----------
-router.get('/classes', asyncHandler(async (req, res) => {
-  const { data, error } = await supabase.from('classes').select('*').eq('school_id', req.session.school.id).order('name');
+  const { error } = await supabase.from('classes').update({ assessment_structure: structure })
+    .eq('id', classId).eq('school_id', req.session.school.id);
   if (error) throw error;
-  res.render('admin/classes', { classes: (data || []).map(mapClass) });
-}));
 
-router.post('/classes', asyncHandler(async (req, res) => {
-  const { name } = req.body;
-  if (name && name.trim()) {
-    const { error } = await supabase.from('classes').insert({ school_id: req.session.school.id, name: name.trim() });
-    if (error) throw error;
-    req.flash('success', 'Class added.');
-  }
-  res.redirect('/admin/classes');
-}));
-
-router.post('/classes/:id/delete', asyncHandler(async (req, res) => {
-  const { error } = await supabase.from('classes').delete().eq('id', req.params.id).eq('school_id', req.session.school.id);
-  if (error) throw error;
-  req.flash('success', 'Class removed.');
+  req.flash('success', 'Assessment structure updated for this class. Note: this does not retroactively change previously saved scores.');
   res.redirect('/admin/classes');
 }));
 

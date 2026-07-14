@@ -1,0 +1,38 @@
+<%- include('../partials/header', { title: 'Configure Scoring' }) %>
+
+<h3 class="mb-1">Configure Scoring — <%= cls.name %></h3>
+<p class="text-muted mb-4">
+  Choose 1, 2 or 3 CA components plus exactly 1 Exam component for this class. Max scores must
+  add up to exactly 100. This only affects <strong><%= cls.name %></strong> — other classes are unaffected.
+  Changing this does not retroactively change scores already saved for this class.
+</p>
+
+<div class="card p-4">
+  <form method="POST" action="/admin/classes/<%= cls.id %>/assessment">
+    <% const findCA = (n) => structure.filter(function(c){ return c.type === 'ca'; })[n-1]; %>
+    <table class="table align-middle">
+      <thead><tr><th style="width:70px;">Enabled</th><th>Component</th><th>Label</th><th style="width:140px;">Max Score</th></tr></thead>
+      <tbody>
+        <% for (let n = 1; n <= 3; n++) { const ca = findCA(n); %>
+          <tr>
+            <td class="text-center"><input type="checkbox" name="caEnabled" value="<%= n %>" <%= ca ? 'checked' : '' %>></td>
+            <td>CA <%= n %></td>
+            <td><input type="text" name="caLabel<%= n %>" class="form-control" value="<%= ca ? ca.label : (n===1 ? '1st CA' : n===2 ? '2nd CA' : '3rd CA') %>"></td>
+            <td><input type="number" name="caMax<%= n %>" class="form-control" min="1" max="100" value="<%= ca ? ca.max : '' %>"></td>
+          </tr>
+        <% } %>
+        <% const examComp = structure.filter(function(c){ return c.type === 'exam'; })[0]; %>
+        <tr>
+          <td class="text-center text-muted small">Always on</td>
+          <td>Exam</td>
+          <td><input type="text" name="examLabel" class="form-control" value="<%= examComp ? examComp.label : 'Exam' %>"></td>
+          <td><input type="number" name="examMax" class="form-control" min="1" max="100" value="<%= examComp ? examComp.max : '' %>"></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Save for <%= cls.name %></button>
+    <a href="/admin/classes" class="btn btn-outline-secondary ms-2">Cancel</a>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

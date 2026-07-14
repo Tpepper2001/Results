@@ -15,20 +15,30 @@
 
 <div class="card p-4">
   <table class="table">
-    <thead><tr><th>Class Name</th><th></th></tr></thead>
+    <thead><tr><th>Class Name</th><th>Assessment Structure</th><th></th></tr></thead>
     <tbody>
       <% classes.forEach(function(c) { %>
         <tr>
           <td><%= c.name %></td>
+          <td>
+            <% if (c.assessmentStructure) { %>
+              <% c.assessmentStructure.forEach(function(comp) { %>
+                <span class="badge bg-secondary me-1"><%= comp.label %> (<%= comp.max %>)</span>
+              <% }) %>
+            <% } else { %>
+              <span class="text-muted small">Default: 1st CA (20), 2nd CA (20), Exam (60)</span>
+            <% } %>
+          </td>
           <td class="text-end">
-            <form method="POST" action="/admin/classes/<%= c.id %>/delete" onsubmit="return confirm('Remove this class?');">
+            <a href="/admin/classes/<%= c.id %>/assessment" class="btn btn-sm btn-outline-primary">Configure Scoring</a>
+            <form method="POST" action="/admin/classes/<%= c.id %>/delete" class="d-inline" onsubmit="return confirm('Remove this class?');">
               <button class="btn btn-sm btn-outline-danger">Delete</button>
             </form>
           </td>
         </tr>
       <% }) %>
       <% if (!classes.length) { %>
-        <tr><td colspan="2" class="text-muted text-center">No classes added yet.</td></tr>
+        <tr><td colspan="3" class="text-muted text-center">No classes added yet.</td></tr>
       <% } %>
     </tbody>
   </table>

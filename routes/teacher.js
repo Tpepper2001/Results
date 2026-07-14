@@ -65,7 +65,6 @@ router.get('/scores', asyncHandler(async (req, res) => {
   }
 
   const school = req.session.school;
-  const structure = (school.assessmentStructure && school.assessmentStructure.length) ? school.assessmentStructure : DEFAULT_ASSESSMENT_STRUCTURE;
 
   const [
     { data: studentRows, error: stErr },
@@ -80,6 +79,9 @@ router.get('/scores', asyncHandler(async (req, res) => {
   ]);
   if (stErr) throw stErr; if (clsErr) throw clsErr; if (subjErr) throw subjErr; if (scErr) throw scErr;
 
+  const cls = mapClass(clsRow);
+  const structure = cls.assessmentStructure || DEFAULT_ASSESSMENT_STRUCTURE;
+
   const students = (studentRows || []).map(mapStudent);
   const scores = (scoreRows || []).map(mapScore);
   const existingScores = {};
@@ -89,7 +91,7 @@ router.get('/scores', asyncHandler(async (req, res) => {
   });
 
   res.render('teacher/scores', {
-    students, cls: mapClass(clsRow), subject: mapSubject(subjRow),
+    students, cls, subject: mapSubject(subjRow),
     classId, subjectId, existingScores, structure,
     postAction: '/teacher/scores'
   });
@@ -109,7 +111,9 @@ router.post('/scores', asyncHandler(async (req, res) => {
     return res.redirect('/teacher');
   }
 
-  const structure = (school.assessmentStructure && school.assessmentStructure.length) ? school.assessmentStructure : DEFAULT_ASSESSMENT_STRUCTURE;
+  const { data: clsRow, error: clsErr } = await supabase.from('classes').select('*').eq('id', classId).single();
+  if (clsErr) throw clsErr;
+  const structure = mapClass(clsRow).assessmentStructure || DEFAULT_ASSESSMENT_STRUCTURE;
   const ids = [].concat(studentIds || []);
   const notOfferingIds = new Set([].concat(req.body.notOfferingIds || []));
 

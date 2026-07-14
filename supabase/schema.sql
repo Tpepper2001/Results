@@ -224,3 +224,15 @@ alter table schools add column if not exists assessment_structure jsonb not null
 -- rows in totals/averages/ranking.
 alter table scores add column if not exists components jsonb not null default '{}'::jsonb;
 alter table scores add column if not exists not_offering boolean not null default false;
+
+-- ==========================================
+-- MIGRATION: Move assessment structure from school-level to class-level
+-- Run this in Supabase SQL Editor. Safe to re-run.
+-- ==========================================
+
+-- Each class can now have its own CA/Exam structure. NULL means "use the
+-- default 1st CA (20) + 2nd CA (20) + Exam (60)" until an admin customizes it.
+-- The old schools.assessment_structure column is no longer used by the app
+-- but is left in place (harmless) rather than dropped, to avoid data loss
+-- risk on a destructive migration.
+alter table classes add column if not exists assessment_structure jsonb;

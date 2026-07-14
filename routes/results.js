@@ -35,7 +35,6 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
 
   const session = req.query.session || school.session;
   const term = req.query.term || school.term;
-  const structure = (school.assessmentStructure && school.assessmentStructure.length) ? school.assessmentStructure : DEFAULT_ASSESSMENT_STRUCTURE;
 
   const [
     { data: scoreRows, error: scErr },
@@ -49,6 +48,9 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
     supabase.from('psychomotor_scores').select('*').eq('school_id', schoolId).eq('student_id', studentId).eq('session', session).eq('term', term).maybeSingle()
   ]);
   if (scErr) throw scErr; if (subjErr) throw subjErr; if (clsErr) throw clsErr; if (psErr) throw psErr;
+
+  const cls = mapClass(clsRow);
+  const structure = (cls && cls.assessmentStructure) || DEFAULT_ASSESSMENT_STRUCTURE;
 
   const subjectMap = {}; (subjectRows || []).map(mapSubject).forEach(s => subjectMap[s.id] = s.name);
   const scores = (scoreRows || []).map(mapScore);
@@ -88,7 +90,7 @@ router.get('/:studentId', asyncHandler(async (req, res) => {
   const psychomotor = psychoRow ? mapPsychomotor(psychoRow) : null;
 
   res.render('results/sheet', {
-    student, cls: mapClass(clsRow), school, session, term, rows, gradedRows, totalScore,
+    student, cls, school, session, term, rows, gradedRows, totalScore,
     average: averageDisplay, overallGrade, position, classSize: (classmateRows || []).length,
     psychomotor, skills: PSYCHOMOTOR_SKILLS, rating: PSYCHOMOTOR_RATING, structure
   });
